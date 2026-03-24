@@ -12,8 +12,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     throw redirect(`/app?${url.searchParams.toString()}`);
   }
 
-  console.log('first')
-
   return { showForm: Boolean(login) };
 };
 

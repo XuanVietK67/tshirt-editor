@@ -146,6 +146,14 @@ body {
 .product-stage { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-lg); width: 400px; flex-shrink: 0; overflow: hidden; position: relative; }
 .product-img-area { position: relative; height: 280px; background: var(--surface2); overflow: hidden; cursor: crosshair; user-select: none; }
 .product-img-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; pointer-events: none; }
+.product-upload-area { pointer-events: auto; cursor: pointer; transition: background 0.15s; }
+.product-upload-area:hover { background: var(--surface3); }
+.product-img-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
+.product-img-controls { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; z-index: 10; }
+.product-img-area:hover .product-img-controls { opacity: 1; }
+.img-ctrl-btn { display: flex; align-items: center; gap: 4px; padding: 4px 8px; font-size: 11px; font-weight: 500; color: #fff; background: rgba(0,0,0,0.55); border: none; border-radius: 5px; cursor: pointer; backdrop-filter: blur(4px); transition: background 0.12s; }
+.img-ctrl-btn:hover { background: rgba(0,0,0,0.75); }
+.img-ctrl-remove:hover { background: rgba(216,44,13,0.8); }
 .img-icon { width: 48px; height: 48px; border-radius: 10px; background: var(--surface3); display: flex; align-items: center; justify-content: center; }
 .img-hint { font-size: 11px; color: var(--text3); }
 .product-details { padding: 18px; }

@@ -48,6 +48,7 @@ const enabledFeatures = ref<Set<string>>(
 );
 const tool = ref<"draw" | "select">("draw");
 const mode = ref<"merchant" | "buyer">("merchant");
+const productImage = ref<string | null>(null);
 
 export function useEditorState() {
   function uid() {
@@ -118,6 +119,10 @@ export function useEditorState() {
     if (m === "buyer") selectedZoneId.value = null;
   }
 
+  function setProductImage(url: string | null) {
+    productImage.value = url;
+  }
+
   return {
     zones,
     selectedZoneId,
@@ -126,6 +131,7 @@ export function useEditorState() {
     enabledFeaturesCount,
     tool,
     mode,
+    productImage,
     addZone,
     addDefaultZone,
     deleteZone,
@@ -134,5 +140,6 @@ export function useEditorState() {
     toggleFeature,
     setTool,
     setMode,
+    setProductImage,
   };
 }

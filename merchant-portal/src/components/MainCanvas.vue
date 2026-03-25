@@ -11,12 +11,33 @@ const {
   selectedZoneId,
   tool,
   mode,
+  productImage,
   addZone,
   selectZone,
   deselectZone,
   setTool,
   setMode,
+  setProductImage,
 } = useEditorState();
+
+const photoInputRef = ref<HTMLInputElement | null>(null);
+
+function triggerPhotoUpload() {
+  photoInputRef.value?.click();
+}
+
+function onPhotoSelected(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0];
+  if (!file) return;
+  const url = URL.createObjectURL(file);
+  setProductImage(url);
+  // Reset input so the same file can be re-selected
+  (e.target as HTMLInputElement).value = "";
+}
+
+function removePhoto() {
+  setProductImage(null);
+}
 
 const imgCanvasRef = ref<HTMLElement | null>(null);
 const bodyCanvasRef = ref<HTMLElement | null>(null);
@@ -281,6 +302,15 @@ onUnmounted(() => {
             <div class="buyer-badge">Buyer Preview</div>
           </div>
 
+          <!-- Hidden file input -->
+          <input
+            ref="photoInputRef"
+            type="file"
+            accept="image/*"
+            style="display: none"
+            @change="onPhotoSelected"
+          />
+
           <!-- Image canvas -->
           <div
             ref="imgCanvasRef"
@@ -289,7 +319,16 @@ onUnmounted(() => {
             @mousedown="onCanvasPointerdown($event, imgCanvasRef!, 'img')"
             @touchstart.prevent="onCanvasPointerdown($event, imgCanvasRef!, 'img')"
           >
-            <div class="product-img-bg">
+            <!-- Uploaded product photo background -->
+            <img
+              v-if="productImage"
+              :src="productImage"
+              class="product-img-photo"
+              draggable="false"
+            />
+
+            <!-- Placeholder when no image uploaded -->
+            <div v-if="!productImage" class="product-img-bg product-upload-area" @click.stop="mode === 'merchant' && triggerPhotoUpload()">
               <div class="img-icon">
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                   <rect
@@ -311,7 +350,25 @@ onUnmounted(() => {
                   />
                 </svg>
               </div>
-              <span class="img-hint">Product photo</span>
+              <span class="img-hint" v-if="mode === 'merchant'">Click to upload product photo</span>
+              <span class="img-hint" v-else>Product photo</span>
+            </div>
+
+            <!-- Controls overlay when image is set (merchant mode only) -->
+            <div v-if="productImage && mode === 'merchant'" class="product-img-controls">
+              <button class="img-ctrl-btn" title="Change photo" @click.stop="triggerPhotoUpload()">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M1.5 6a4.5 4.5 0 1 0 4.5-4.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                  <path d="M1.5 2.5v3.5h3.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Change
+              </button>
+              <button class="img-ctrl-btn img-ctrl-remove" title="Remove photo" @click.stop="removePhoto()">
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 2l8 8M10 2l-8 8" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+                </svg>
+                Remove
+              </button>
             </div>
 
             <!-- Drawing preview on img canvas -->

@@ -190,6 +190,8 @@ function onPointerUp() {
     const { x, y, w, h } = drawPreview.value;
     if (w > 24 && h > 18) {
       addZone(drawCanvasName, x, y, w, h);
+    } else if (!productImage.value && drawCanvasName === 'img') {
+      triggerPhotoUpload();
     }
     isDrawing = false;
     drawPreview.value = { ...drawPreview.value, visible: false };
@@ -328,7 +330,7 @@ onUnmounted(() => {
             />
 
             <!-- Placeholder when no image uploaded -->
-            <div v-if="!productImage" class="product-img-bg product-upload-area" @click.stop="mode === 'merchant' && triggerPhotoUpload()">
+            <div v-if="!productImage" class="product-img-bg">
               <div class="img-icon">
                 <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
                   <rect
@@ -350,7 +352,7 @@ onUnmounted(() => {
                   />
                 </svg>
               </div>
-              <span class="img-hint" v-if="mode === 'merchant'">Click to upload product photo</span>
+              <span class="img-hint" v-if="mode === 'merchant'">Click to upload · drag to add zone</span>
               <span class="img-hint" v-else>Product photo</span>
             </div>
 

@@ -33,7 +33,6 @@ watch(
     newZoneId.value = newest.id;
     if (newZoneTimer) clearTimeout(newZoneTimer);
     newZoneTimer = setTimeout(() => { newZoneId.value = null; }, 700);
-    // Scroll the new zone into view (useful when created via the sidebar button)
     await nextTick();
     const el = document.querySelector(`[data-zone-id="${newest.id}"]`) as HTMLElement | null;
     el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
@@ -49,18 +48,19 @@ let startY = 0;
 
 const drawPreview = ref({ visible: false, x: 0, y: 0, w: 0, h: 0, canvas: "" });
 
-// Drag state
+// Drag / resize state
 let dragZone: Zone | null = null;
 let dragOffX = 0;
 let dragOffY = 0;
-
-// Resize state
 let resizeZone: Zone | null = null;
+
+// Reactive dragging flag for cursor feedback
+const isDragging = ref(false);
 
 const canvasHint = computed(() => {
   if (mode.value === "buyer") return "Buyer view — zones are locked";
   if (tool.value === "draw")
-    return "Draw rectangles on the product to define buyer zones";
+    return "Click a zone to select · drag to move · draw on canvas to add a zone";
   return "Click a zone to select · drag to move · drag corner to resize";
 });
 
@@ -68,53 +68,60 @@ function getCanvasEl(canvas: "img" | "body") {
   return canvas === "img" ? imgCanvasRef.value : bodyCanvasRef.value;
 }
 
-function onCanvasMousedown(
-  e: MouseEvent,
+// Unified coordinate extractor for mouse and touch events
+function getEventCoords(e: MouseEvent | TouchEvent) {
+  if ("touches" in e) {
+    const t = e.touches[0] ?? e.changedTouches[0];
+    return { clientX: t.clientX, clientY: t.clientY };
+  }
+  return { clientX: e.clientX, clientY: e.clientY };
+}
+
+// Zone pointer down — always select + drag regardless of active tool
+function onZonePointerdown(e: MouseEvent | TouchEvent, zone: Zone) {
+  if (mode.value !== "merchant") return;
+  e.stopPropagation();
+  selectZone(zone.id);
+  const { clientX, clientY } = getEventCoords(e);
+  const c = getCanvasEl(zone.canvas)!;
+  const cr = c.getBoundingClientRect();
+  dragZone = zone;
+  dragOffX = clientX - cr.left - zone.x;
+  dragOffY = clientY - cr.top - zone.y;
+  isDragging.value = true;
+}
+
+// Canvas pointer down — only start drawing in draw mode
+function onCanvasPointerdown(
+  e: MouseEvent | TouchEvent,
   canvasEl: HTMLElement,
   canvasName: "img" | "body",
 ) {
   if (mode.value !== "merchant" || tool.value !== "draw") return;
   if ((e.target as HTMLElement).closest(".z-rect")) return;
+  const { clientX, clientY } = getEventCoords(e);
   isDrawing = true;
   drawCanvasEl = canvasEl;
   drawCanvasName = canvasName;
   const r = canvasEl.getBoundingClientRect();
-  startX = e.clientX - r.left;
-  startY = e.clientY - r.top;
-  drawPreview.value = {
-    visible: true,
-    x: startX,
-    y: startY,
-    w: 0,
-    h: 0,
-    canvas: canvasName,
-  };
+  startX = clientX - r.left;
+  startY = clientY - r.top;
+  drawPreview.value = { visible: true, x: startX, y: startY, w: 0, h: 0, canvas: canvasName };
 }
 
-function onZoneMousedown(e: MouseEvent, zone: Zone) {
-  if (mode.value !== "merchant") return;
-  e.stopPropagation();
-  selectZone(zone.id);
-  if (tool.value === "select") {
-    const c = getCanvasEl(zone.canvas)!;
-    const cr = c.getBoundingClientRect();
-    dragZone = zone;
-    dragOffX = e.clientX - cr.left - zone.x;
-    dragOffY = e.clientY - cr.top - zone.y;
-  }
-}
-
-function onResizeMousedown(e: MouseEvent, zone: Zone) {
+// Resize handle pointer down
+function onResizePointerdown(e: MouseEvent | TouchEvent, zone: Zone) {
   e.stopPropagation();
   e.preventDefault();
   resizeZone = zone;
 }
 
-function onMousemove(e: MouseEvent) {
+// Shared move logic used by both mouse and touch
+function handleMove(clientX: number, clientY: number) {
   if (isDrawing && drawCanvasEl) {
     const r = drawCanvasEl.getBoundingClientRect();
-    const cx = e.clientX - r.left;
-    const cy = e.clientY - r.top;
+    const cx = clientX - r.left;
+    const cy = clientY - r.top;
     drawPreview.value = {
       visible: true,
       x: Math.min(startX, cx),
@@ -130,29 +137,34 @@ function onMousemove(e: MouseEvent) {
     const cr = c.getBoundingClientRect();
     dragZone.x = Math.max(
       0,
-      Math.min(
-        Math.round(e.clientX - cr.left - dragOffX),
-        cr.width - dragZone.w,
-      ),
+      Math.min(Math.round(clientX - cr.left - dragOffX), cr.width - dragZone.w),
     );
     dragZone.y = Math.max(
       0,
-      Math.min(
-        Math.round(e.clientY - cr.top - dragOffY),
-        cr.height - dragZone.h,
-      ),
+      Math.min(Math.round(clientY - cr.top - dragOffY), cr.height - dragZone.h),
     );
     return;
   }
   if (resizeZone) {
     const c = getCanvasEl(resizeZone.canvas)!;
     const cr = c.getBoundingClientRect();
-    resizeZone.w = Math.max(40, Math.round(e.clientX - cr.left - resizeZone.x));
-    resizeZone.h = Math.max(24, Math.round(e.clientY - cr.top - resizeZone.y));
+    resizeZone.w = Math.max(40, Math.round(clientX - cr.left - resizeZone.x));
+    resizeZone.h = Math.max(24, Math.round(clientY - cr.top - resizeZone.y));
   }
 }
 
-function onMouseup() {
+function onMousemove(e: MouseEvent) {
+  handleMove(e.clientX, e.clientY);
+}
+
+function onTouchMove(e: TouchEvent) {
+  // Prevent page scroll while dragging/drawing
+  if (isDrawing || dragZone || resizeZone) e.preventDefault();
+  const t = e.touches[0];
+  if (t) handleMove(t.clientX, t.clientY);
+}
+
+function onPointerUp() {
   if (isDrawing) {
     const { x, y, w, h } = drawPreview.value;
     if (w > 24 && h > 18) {
@@ -164,16 +176,21 @@ function onMouseup() {
   }
   dragZone = null;
   resizeZone = null;
+  isDragging.value = false;
 }
 
 onMounted(() => {
   document.addEventListener("mousemove", onMousemove);
-  document.addEventListener("mouseup", onMouseup);
+  document.addEventListener("mouseup", onPointerUp);
+  document.addEventListener("touchmove", onTouchMove, { passive: false });
+  document.addEventListener("touchend", onPointerUp);
 });
 
 onUnmounted(() => {
   document.removeEventListener("mousemove", onMousemove);
-  document.removeEventListener("mouseup", onMouseup);
+  document.removeEventListener("mouseup", onPointerUp);
+  document.removeEventListener("touchmove", onTouchMove);
+  document.removeEventListener("touchend", onPointerUp);
 });
 </script>
 
@@ -268,7 +285,9 @@ onUnmounted(() => {
           <div
             ref="imgCanvasRef"
             class="product-img-area"
-            @mousedown="onCanvasMousedown($event, imgCanvasRef!, 'img')"
+            :style="{ cursor: mode === 'merchant' && tool === 'draw' ? 'crosshair' : 'default' }"
+            @mousedown="onCanvasPointerdown($event, imgCanvasRef!, 'img')"
+            @touchstart.prevent="onCanvasPointerdown($event, imgCanvasRef!, 'img')"
           >
             <div class="product-img-bg">
               <div class="img-icon">
@@ -312,7 +331,11 @@ onUnmounted(() => {
               v-for="zone in zones.filter((z) => z.canvas === 'img')"
               :key="zone.id"
               class="z-rect"
-              :class="{ 'z-selected': selectedZoneId === zone.id, 'z-new': newZoneId === zone.id }"
+              :class="{
+                'z-selected': selectedZoneId === zone.id,
+                'z-new': newZoneId === zone.id,
+                'z-dragging': isDragging && selectedZoneId === zone.id,
+              }"
               :data-zone-id="zone.id"
               :style="{
                 left: zone.x + 'px',
@@ -322,14 +345,15 @@ onUnmounted(() => {
                 borderColor: ZONE_COLORS[zone.colorIdx].hex,
                 background: ZONE_COLORS[zone.colorIdx].bg,
                 cursor:
-                  mode === 'merchant'
-                    ? tool === 'select'
-                      ? 'move'
-                      : 'default'
-                    : 'default',
+                  mode === 'buyer'
+                    ? 'default'
+                    : isDragging && selectedZoneId === zone.id
+                      ? 'grabbing'
+                      : 'grab',
                 pointerEvents: mode === 'buyer' ? 'none' : 'auto',
               }"
-              @mousedown="onZoneMousedown($event, zone)"
+              @mousedown="onZonePointerdown($event, zone)"
+              @touchstart.prevent="onZonePointerdown($event, zone)"
             >
               <div
                 class="z-label"
@@ -344,7 +368,8 @@ onUnmounted(() => {
                 v-if="mode === 'merchant'"
                 class="z-resize"
                 :style="{ color: ZONE_COLORS[zone.colorIdx].hex }"
-                @mousedown="onResizeMousedown($event, zone)"
+                @mousedown.stop="onResizePointerdown($event, zone)"
+                @touchstart.prevent.stop="onResizePointerdown($event, zone)"
               ></div>
             </div>
           </div>

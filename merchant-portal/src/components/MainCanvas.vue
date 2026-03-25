@@ -190,6 +190,8 @@ function onPointerUp() {
     const { x, y, w, h } = drawPreview.value;
     if (w > 24 && h > 18) {
       addZone(drawCanvasName, x, y, w, h);
+    } else if (!productImage.value && drawCanvasName === 'img') {
+      triggerPhotoUpload();
     }
     isDrawing = false;
     drawPreview.value = { ...drawPreview.value, visible: false };
@@ -350,12 +352,8 @@ onUnmounted(() => {
                   />
                 </svg>
               </div>
-              <span class="img-hint">Product photo</span>
-              <button
-                v-if="mode === 'merchant'"
-                class="upload-photo-btn"
-                @click.stop="triggerPhotoUpload()"
-              >Upload photo</button>
+              <span class="img-hint" v-if="mode === 'merchant'">Click to upload · drag to add zone</span>
+              <span class="img-hint" v-else>Product photo</span>
             </div>
 
             <!-- Controls overlay when image is set (merchant mode only) -->

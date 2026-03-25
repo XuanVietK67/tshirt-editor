@@ -86,7 +86,7 @@ Zones are **always directly selectable and draggable** regardless of the active 
 
 ## Developing New Features
 
-**IMPORTANT**: Create a new git branch before starting any feature work and stay on it for the session.(add new feature start prompt by: feat:, fix bug start prompt by fixbug:) if start prompt is not feat or fixbug, please working on current branch
+**IMPORTANT**: Create a new git branch before starting any feature work and stay on it for the session.
 
 ### Adding a new page/route
 

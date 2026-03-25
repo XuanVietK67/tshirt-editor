@@ -1,0 +1,1097 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Personalize Config — Merchant</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f11;
+  --surface: #17171a;
+  --surface2: #1e1e22;
+  --surface3: #252529;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #f0f0f2;
+  --text2: #8a8a94;
+  --text3: #55555f;
+  --accent: #6c63ff;
+  --accent2: #8b84ff;
+  --accent-bg: rgba(108,99,255,0.12);
+  --accent-border: rgba(108,99,255,0.35);
+  --green: #22c55e;
+  --green-bg: rgba(34,197,94,0.1);
+  --green-border: rgba(34,197,94,0.3);
+  --amber: #f59e0b;
+  --amber-bg: rgba(245,158,11,0.1);
+  --red: #ef4444;
+  --red-bg: rgba(239,68,68,0.1);
+  --mono: 'DM Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+  --radius: 10px;
+  --radius-sm: 6px;
+  --radius-lg: 14px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* ── Layout ── */
+.shell { display: grid; grid-template-columns: 220px 1fr 300px; height: 100vh; }
+.col { display: flex; flex-direction: column; overflow: hidden; }
+
+/* ── Top bar ── */
+.topbar {
+  grid-column: 1 / -1;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 18px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+.topbar-logo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.logo-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 10px var(--accent);
+}
+.topbar-sep { width: 1px; height: 20px; background: var(--border2); margin: 0 6px; }
+.topbar-crumb { font-size: 12px; color: var(--text2); }
+.topbar-crumb span { color: var(--text); }
+.topbar-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: var(--radius-sm); font-family: var(--sans); font-size: 12px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+.btn-ghost { background: transparent; color: var(--text2); border: 1px solid var(--border2); }
+.btn-ghost:hover { background: var(--surface3); color: var(--text); border-color: var(--border2); }
+.btn-accent { background: var(--accent); color: #fff; }
+.btn-accent:hover { background: var(--accent2); }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 6px var(--green); }
+.status-label { font-size: 11px; color: var(--text2); }
+
+/* ── Left sidebar ── */
+.left-col {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+.left-scroll { flex: 1; overflow-y: auto; padding: 12px; }
+.left-scroll::-webkit-scrollbar { width: 3px; }
+.left-scroll::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 10px; }
+
+.nav-section { margin-bottom: 6px; }
+.nav-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 4px 8px 6px; }
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--text2);
+  font-size: 12.5px;
+  font-weight: 400;
+  transition: all 0.12s;
+  border: 1px solid transparent;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--accent-bg); color: var(--accent2); border-color: var(--accent-border); }
+.nav-item svg { flex-shrink: 0; opacity: 0.7; }
+.nav-item.active svg { opacity: 1; }
+.nav-badge { margin-left: auto; font-size: 10px; font-family: var(--mono); background: var(--surface3); color: var(--text2); padding: 1px 6px; border-radius: 20px; }
+.nav-item.active .nav-badge { background: var(--accent-bg); color: var(--accent2); }
+
+/* ── Main canvas ── */
+.main-col {
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+}
+.canvas-topbar {
+  height: 46px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.seg-ctrl {
+  display: flex;
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  gap: 1px;
+}
+.seg-btn {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--text2);
+  font-family: var(--sans);
+  transition: all 0.12s;
+}
+.seg-btn.active { background: var(--surface3); color: var(--text); }
+.canvas-tools { display: flex; gap: 4px; margin-left: auto; }
+.tool-btn {
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.tool-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+.tool-btn.active { background: var(--accent-bg); color: var(--accent2); border-color: var(--accent-border); }
+
+.canvas-body { flex: 1; overflow: auto; display: flex; align-items: center; justify-content: center; padding: 24px; }
+.product-stage {
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-lg);
+  width: 400px;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+.product-img-area {
+  position: relative;
+  height: 280px;
+  background: var(--surface2);
+  overflow: hidden;
+  cursor: crosshair;
+  user-select: none;
+}
+.product-img-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;
+  pointer-events: none;
+}
+.img-icon { width: 48px; height: 48px; border-radius: 10px; background: var(--surface3); display: flex; align-items: center; justify-content: center; }
+.img-hint { font-size: 11px; color: var(--text3); }
+.product-details { padding: 18px; }
+.product-name { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 3px; letter-spacing: -0.02em; }
+.product-price { font-size: 13px; color: var(--text2); margin-bottom: 16px; }
+.product-body-area {
+  position: relative;
+  min-height: 100px;
+  cursor: crosshair;
+}
+.add-to-cart {
+  width: 100%; padding: 11px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: default;
+  margin-top: 14px;
+}
+
+/* Zone rects */
+.z-rect {
+  position: absolute;
+  border: 2px solid;
+  border-radius: 5px;
+  cursor: move;
+  transition: box-shadow 0.12s;
+}
+.z-rect:hover { box-shadow: 0 0 0 3px rgba(255,255,255,0.06); }
+.z-rect.z-selected { box-shadow: 0 0 0 2px #fff2, 0 0 0 4px rgba(108,99,255,0.4); }
+.z-label {
+  position: absolute;
+  top: 0; left: 0;
+  transform: translateY(-100%);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px 4px 0 0;
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+  font-family: var(--mono);
+}
+.z-resize {
+  position: absolute; bottom: 0; right: 0;
+  width: 12px; height: 12px;
+  cursor: se-resize;
+}
+.z-resize::after {
+  content: '';
+  position: absolute;
+  bottom: 3px; right: 3px;
+  width: 5px; height: 5px;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+  border-color: inherit;
+  opacity: 0.7;
+}
+.z-drawing {
+  position: absolute;
+  border: 2px dashed var(--accent);
+  background: rgba(108,99,255,0.08);
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+/* ── Right panel ── */
+.right-col {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.right-scroll { flex: 1; overflow-y: auto; }
+.right-scroll::-webkit-scrollbar { width: 3px; }
+.right-scroll::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 10px; }
+.rp-section { padding: 16px; border-bottom: 1px solid var(--border); }
+.rp-head { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
+
+/* Feature cards */
+.feature-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  transition: all 0.12s;
+}
+.feature-card.enabled {
+  border-color: var(--accent-border);
+  background: var(--accent-bg);
+}
+.feature-header { display: flex; align-items: center; gap: 10px; margin-bottom: 0; }
+.feature-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--surface3);
+  font-size: 15px;
+}
+.feature-card.enabled .feature-icon { background: var(--accent-bg); }
+.feature-info { flex: 1; }
+.feature-name { font-size: 12.5px; font-weight: 500; color: var(--text); }
+.feature-desc { font-size: 11px; color: var(--text2); margin-top: 1px; }
+.feature-card.enabled .feature-name { color: var(--accent2); }
+.feature-expand { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.feature-expand.hidden { display: none; }
+
+/* Toggle switch */
+.toggle-wrap { flex-shrink: 0; }
+.toggle { position: relative; width: 34px; height: 19px; }
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--surface3);
+  border-radius: 19px;
+  border: 1px solid var(--border2);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.toggle-thumb {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 13px; height: 13px;
+  border-radius: 50%;
+  background: var(--text2);
+  transition: all 0.15s;
+}
+.toggle input:checked ~ .toggle-track { background: var(--accent); border-color: var(--accent); }
+.toggle input:checked ~ .toggle-thumb { left: 17px; background: white; }
+
+/* Sub-options */
+.sub-option { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
+.sub-label { font-size: 11.5px; color: var(--text2); }
+.sub-select {
+  font-size: 11px; padding: 4px 8px;
+  background: var(--surface3); color: var(--text);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  font-family: var(--sans); cursor: pointer;
+}
+.sub-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.chip {
+  font-size: 10.5px; padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface3);
+  color: var(--text2);
+  cursor: pointer;
+  font-family: var(--mono);
+  transition: all 0.12s;
+}
+.chip.on { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent2); }
+
+/* Zone list */
+.zone-list { display: flex; flex-direction: column; gap: 5px; }
+.zone-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.zone-item:hover { border-color: var(--border2); }
+.zone-item.active { border-color: var(--accent-border); background: var(--accent-bg); }
+.zone-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+.zone-item-name { flex: 1; font-size: 12px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zone-item-count { font-size: 10px; font-family: var(--mono); color: var(--text3); }
+.zone-del-btn { font-size: 14px; line-height: 1; color: var(--text3); background: none; border: none; cursor: pointer; padding: 0 2px; }
+.zone-del-btn:hover { color: var(--red); }
+.add-zone-btn {
+  display: flex; align-items: center; gap: 7px;
+  width: 100%; padding: 8px 10px;
+  border: 1px dashed var(--border2);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px; font-family: var(--sans);
+  cursor: pointer;
+  transition: all 0.12s;
+  margin-top: 4px;
+}
+.add-zone-btn:hover { border-color: var(--accent-border); color: var(--accent2); background: var(--accent-bg); }
+
+/* Zone detail panel */
+.zd-panel { padding: 14px; border-bottom: 1px solid var(--border); }
+.zd-title { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.zd-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.zd-key { font-size: 12px; color: var(--text2); }
+.zd-val { font-size: 11px; font-family: var(--mono); color: var(--text); background: var(--surface3); padding: 2px 8px; border-radius: 4px; }
+.zd-input {
+  font-size: 12px; padding: 4px 8px;
+  background: var(--surface3); color: var(--text);
+  border: 1px solid var(--border2); border-radius: var(--radius-sm);
+  font-family: var(--sans); width: 130px;
+}
+.zd-input:focus { outline: none; border-color: var(--accent); }
+.color-row { display: flex; gap: 5px; flex-wrap: wrap; }
+.cswatch {
+  width: 20px; height: 20px;
+  border-radius: 4px; cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.1s;
+}
+.cswatch.active { border-color: #fff; box-shadow: 0 0 0 1px rgba(255,255,255,0.4); }
+.allowed-tools { display: flex; flex-wrap: wrap; gap: 4px; }
+.allowed-chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; padding: 3px 9px;
+  border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: var(--surface3);
+  color: var(--text2); cursor: pointer;
+  transition: all 0.12s;
+}
+.allowed-chip.on { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
+.allowed-chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+
+.save-footer {
+  padding: 12px 14px;
+  border-top: 1px solid var(--border);
+  display: flex; gap: 8px; justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+/* Empty state */
+.empty-panel { padding: 32px 20px; text-align: center; }
+.empty-panel svg { opacity: 0.2; display: block; margin: 0 auto 12px; }
+.empty-panel p { font-size: 12px; color: var(--text3); line-height: 1.7; }
+
+/* Buyer mode overlay */
+.buyer-overlay {
+  position: absolute; inset: 0; z-index: 50;
+  background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius-lg);
+  pointer-events: none;
+}
+.buyer-badge { background: var(--surface3); border: 1px solid var(--border2); border-radius: 20px; padding: 6px 14px; font-size: 11px; color: var(--text2); font-weight: 500; letter-spacing: 0.03em; }
+
+/* Responsive drawing cursor state */
+.drawing-mode .product-img-area,
+.drawing-mode .product-body-area { cursor: crosshair; }
+</style>
+</head>
+<body>
+
+<div class="shell" style="display:grid; grid-template-rows: 52px 1fr; grid-template-columns: 220px 1fr 300px;">
+
+<!-- Top bar -->
+<div class="topbar" style="grid-column:1/-1; grid-row:1;">
+  <div class="topbar-logo">
+    <div class="logo-dot"></div>
+    Personalize
+  </div>
+  <div class="topbar-sep"></div>
+  <div class="topbar-crumb">Products / <span>Leather Wallet</span> / Config</div>
+  <div class="topbar-actions">
+    <div class="status-dot"></div>
+    <span class="status-label">Unsaved changes</span>
+    <button class="btn btn-ghost">Discard</button>
+    <button class="btn btn-accent">
+      <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Publish
+    </button>
+  </div>
+</div>
+
+<!-- Left sidebar -->
+<div class="left-col" style="grid-column:1; grid-row:2;">
+  <div class="left-scroll">
+    <div class="nav-section" style="margin-top:6px">
+      <div class="nav-label">Setup</div>
+      <div class="nav-item active" onclick="setPage(this,'features')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="1" width="5" height="5" rx="1.2" fill="currentColor" opacity=".7"/><rect x="8" y="1" width="5" height="5" rx="1.2" fill="currentColor" opacity=".4"/><rect x="1" y="8" width="5" height="5" rx="1.2" fill="currentColor" opacity=".4"/><rect x="8" y="8" width="5" height="5" rx="1.2" fill="currentColor" opacity=".7"/></svg>
+        Features &amp; zones
+        <span class="nav-badge" id="featuresBadge">4</span>
+      </div>
+      <div class="nav-item" onclick="setPage(this,'limits')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v3.5l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Limits &amp; rules
+      </div>
+      <div class="nav-item" onclick="setPage(this,'pricing')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M1.5 7h11M7 1.5v11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Pricing upcharge
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Preview</div>
+      <div class="nav-item" onclick="setPage(this,'buyer')">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="3" stroke="currentColor" stroke-width="1.2"/><path d="M1.5 7c1.5-3 9-3 11 0-2 3-9.5 3-11 0z" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        Buyer view
+      </div>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Zones</div>
+      <div id="sidebarZoneList"></div>
+      <button class="add-zone-btn" onclick="addZone()">
+        <svg width="11" height="11" viewBox="0 0 11 11" fill="none"><line x1="5.5" y1="1" x2="5.5" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="1" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        Draw new zone
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Main canvas -->
+<div class="main-col" style="grid-column:2; grid-row:2;">
+  <div class="canvas-topbar">
+    <div class="seg-ctrl">
+      <button class="seg-btn active" id="segMerchant" onclick="setMode('merchant')">Merchant</button>
+      <button class="seg-btn" id="segBuyer" onclick="setMode('buyer')">Buyer preview</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-left:14px">
+      <button class="tool-btn active" id="tbDraw" onclick="setTool('draw')" title="Draw zone">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><rect x="1" y="1" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.3" stroke-dasharray="3 2"/></svg>
+      </button>
+      <button class="tool-btn" id="tbSelect" onclick="setTool('select')" title="Select / move">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 2l3.5 9 2-3.5 3.5-2L2 2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="canvas-tools">
+      <button class="tool-btn" onclick="fitView()" title="Fit view">
+        <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1.5 4.5V2h2.5M9 2h2.5v2.5M11.5 8.5V11H9M4 11H1.5V8.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <span id="canvasHint" style="margin-left:12px;font-size:11px;color:var(--text3)">Draw rectangles on the product to define buyer zones</span>
+  </div>
+  <div class="canvas-body" id="canvasBody">
+    <div class="product-stage" id="productStage">
+      <!-- image canvas -->
+      <div class="product-img-area" id="imgCanvas">
+        <div class="product-img-bg" id="imgBg">
+          <div class="img-icon">
+            <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><rect x="2" y="4" width="18" height="14" rx="2.5" stroke="#55555f" stroke-width="1.3"/><circle cx="8" cy="9.5" r="1.8" fill="#55555f"/><path d="M2 15l5-4.5 3.5 3.5 3-2.5 6.5 5.5" stroke="#55555f" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="img-hint">Product photo</span>
+        </div>
+      </div>
+      <!-- product body -->
+      <div class="product-details">
+        <div class="product-name">Custom Leather Wallet</div>
+        <div class="product-price">$49.00</div>
+        <div class="product-body-area" id="bodyCanvas">
+          <div style="height:56px;border:1px dashed var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center;margin-bottom:8px">
+            <span style="font-size:11px;color:var(--text3)">Personalization area</span>
+          </div>
+          <div style="height:38px;border:1px dashed var(--border2);border-radius:6px;display:flex;align-items:center;justify-content:center">
+            <span style="font-size:11px;color:var(--text3)">Options</span>
+          </div>
+        </div>
+        <button class="add-to-cart">Add to cart</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Right panel -->
+<div class="right-col" style="grid-column:3; grid-row:2;">
+  <div class="right-scroll" id="rightScroll">
+
+    <!-- Features section -->
+    <div class="rp-section">
+      <div class="rp-head">Design features</div>
+
+      <!-- Text -->
+      <div class="feature-card enabled" id="fc-text">
+        <div class="feature-header">
+          <div class="feature-icon">T</div>
+          <div class="feature-info">
+            <div class="feature-name">Text</div>
+            <div class="feature-desc">Custom text &amp; typography</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" checked onchange="toggleFeature('text',this.checked)">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+        <div class="feature-expand" id="fe-text">
+          <div class="sub-option">
+            <span class="sub-label">Max characters</span>
+            <select class="sub-select"><option>50</option><option selected>100</option><option>200</option><option>Unlimited</option></select>
+          </div>
+          <div class="sub-option">
+            <span class="sub-label">Max lines</span>
+            <select class="sub-select"><option selected>1</option><option>2</option><option>3</option></select>
+          </div>
+          <div style="margin-top:8px">
+            <div class="sub-label" style="margin-bottom:5px">Allowed fonts</div>
+            <div class="sub-chips">
+              <span class="chip on">Serif</span>
+              <span class="chip on">Sans-serif</span>
+              <span class="chip">Script</span>
+              <span class="chip">Display</span>
+              <span class="chip on">Mono</span>
+            </div>
+          </div>
+          <div style="margin-top:8px">
+            <div class="sub-label" style="margin-bottom:5px">Allowed styles</div>
+            <div class="sub-chips">
+              <span class="chip on">Bold</span>
+              <span class="chip on">Italic</span>
+              <span class="chip">Outline</span>
+              <span class="chip">Shadow</span>
+              <span class="chip on">Color</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image -->
+      <div class="feature-card enabled" id="fc-image">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><rect x="1" y="2.5" width="13" height="10" rx="2" stroke="#8a8a94" stroke-width="1.2"/><circle cx="5" cy="6.5" r="1.2" fill="#8a8a94"/><path d="M1.5 11l3.5-3.5 2.5 2.5 2-2 4 4" stroke="#8a8a94" stroke-width="1.2" stroke-linecap="round"/></svg>
+          </div>
+          <div class="feature-info">
+            <div class="feature-name">Image upload</div>
+            <div class="feature-desc">Buyer uploads their photo</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" checked onchange="toggleFeature('image',this.checked)">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+        <div class="feature-expand" id="fe-image">
+          <div class="sub-option">
+            <span class="sub-label">Accepted formats</span>
+            <select class="sub-select"><option selected>JPG, PNG, WEBP</option><option>JPG, PNG</option><option>All image types</option></select>
+          </div>
+          <div class="sub-option">
+            <span class="sub-label">Max file size</span>
+            <select class="sub-select"><option>2 MB</option><option selected>5 MB</option><option>10 MB</option></select>
+          </div>
+          <div class="sub-option">
+            <span class="sub-label">Max images</span>
+            <select class="sub-select"><option selected>1</option><option>2</option><option>3</option></select>
+          </div>
+          <div style="margin-top:8px">
+            <div class="sub-label" style="margin-bottom:5px">Edit tools</div>
+            <div class="sub-chips">
+              <span class="chip on">Crop</span>
+              <span class="chip on">Resize</span>
+              <span class="chip">Rotate</span>
+              <span class="chip on">Flip</span>
+              <span class="chip">Filters</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sticker -->
+      <div class="feature-card enabled" id="fc-sticker">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><circle cx="7.5" cy="7.5" r="6" stroke="#8a8a94" stroke-width="1.2"/><path d="M5 8.5c.6 1 2.4 1 3 0" stroke="#8a8a94" stroke-width="1.1" stroke-linecap="round"/><circle cx="5.5" cy="6" r=".8" fill="#8a8a94"/><circle cx="9.5" cy="6" r=".8" fill="#8a8a94"/></svg>
+          </div>
+          <div class="feature-info">
+            <div class="feature-name">Stickers</div>
+            <div class="feature-desc">Pre-made decorative stickers</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" checked onchange="toggleFeature('sticker',this.checked)">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+        <div class="feature-expand" id="fe-sticker">
+          <div class="sub-option">
+            <span class="sub-label">Max stickers per zone</span>
+            <select class="sub-select"><option>1</option><option selected>3</option><option>5</option><option>10</option></select>
+          </div>
+          <div style="margin-top:8px">
+            <div class="sub-label" style="margin-bottom:5px">Allowed categories</div>
+            <div class="sub-chips">
+              <span class="chip on">Nature</span>
+              <span class="chip on">Shapes</span>
+              <span class="chip on">Animals</span>
+              <span class="chip">Food</span>
+              <span class="chip on">Symbols</span>
+              <span class="chip">Seasonal</span>
+            </div>
+          </div>
+          <div class="sub-option" style="margin-top:6px">
+            <span class="sub-label">Allow resize</span>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+          <div class="sub-option">
+            <span class="sub-label">Allow rotate</span>
+            <label class="toggle"><input type="checkbox" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Icon -->
+      <div class="feature-card enabled" id="fc-icon">
+        <div class="feature-header">
+          <div class="feature-icon">
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none"><polygon points="7.5,1.5 9.5,5.5 14,6 10.5,9.5 11.5,14 7.5,11.5 3.5,14 4.5,9.5 1,6 5.5,5.5" stroke="#8a8a94" stroke-width="1.1" stroke-linejoin="round"/></svg>
+          </div>
+          <div class="feature-info">
+            <div class="feature-name">Icons</div>
+            <div class="feature-desc">Vector icon library</div>
+          </div>
+          <div class="toggle-wrap">
+            <label class="toggle">
+              <input type="checkbox" checked onchange="toggleFeature('icon',this.checked)">
+              <div class="toggle-track"></div>
+              <div class="toggle-thumb"></div>
+            </label>
+          </div>
+        </div>
+        <div class="feature-expand" id="fe-icon">
+          <div class="sub-option">
+            <span class="sub-label">Icon library</span>
+            <select class="sub-select"><option selected>Built-in (240+)</option><option>Custom upload</option><option>Both</option></select>
+          </div>
+          <div class="sub-option">
+            <span class="sub-label">Max icons per zone</span>
+            <select class="sub-select"><option selected>2</option><option>3</option><option>5</option></select>
+          </div>
+          <div style="margin-top:8px">
+            <div class="sub-label" style="margin-bottom:5px">Allow buyer to change</div>
+            <div class="sub-chips">
+              <span class="chip on">Color</span>
+              <span class="chip on">Size</span>
+              <span class="chip on">Rotation</span>
+              <span class="chip">Style</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Zone detail (when selected) -->
+    <div id="zoneDetailPanel" style="display:none">
+      <div class="zd-panel">
+        <div class="zd-title">Selected zone</div>
+        <div class="zd-row">
+          <span class="zd-key">Name</span>
+          <input class="zd-input" id="zdName" placeholder="Zone name" oninput="updateZone()">
+        </div>
+        <div class="zd-row">
+          <span class="zd-key">Color</span>
+          <div class="color-row" id="zdColors"></div>
+        </div>
+        <div class="zd-row"><span class="zd-key">X</span><span class="zd-val" id="zdX">—</span></div>
+        <div class="zd-row"><span class="zd-key">Y</span><span class="zd-val" id="zdY">—</span></div>
+        <div class="zd-row"><span class="zd-key">W</span><span class="zd-val" id="zdW">—</span></div>
+        <div class="zd-row"><span class="zd-key">H</span><span class="zd-val" id="zdH">—</span></div>
+      </div>
+      <div class="zd-panel">
+        <div class="zd-title">Allowed features in zone</div>
+        <div class="allowed-tools" id="zdAllowed"></div>
+      </div>
+      <div class="zd-panel">
+        <div class="zd-title">Zone rules</div>
+        <div class="zd-row">
+          <span class="zd-key">Required</span>
+          <label class="toggle"><input type="checkbox" id="zdRequired"><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div class="zd-row">
+          <span class="zd-key">Max items</span>
+          <select class="sub-select" id="zdMax"><option>1</option><option selected>3</option><option>5</option><option>Unlimited</option></select>
+        </div>
+        <div class="zd-row">
+          <span class="zd-key">Show border to buyer</span>
+          <label class="toggle"><input type="checkbox" id="zdBorder" checked><div class="toggle-track"></div><div class="toggle-thumb"></div></label>
+        </div>
+        <div style="margin-top:8px;text-align:right">
+          <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;color:var(--red);border-color:rgba(239,68,68,0.3)" onclick="deleteSelectedZone()">Delete zone</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="zoneEmptyPanel" class="empty-panel">
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none"><rect x="4" y="4" width="32" height="32" rx="6" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 4"/><line x1="20" y1="12" x2="20" y2="28" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="12" y1="20" x2="28" y2="20" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      <p>Draw a rectangle on the product canvas to define a zone.<br><br>Zones restrict where buyers can place text, images, stickers &amp; icons.</p>
+    </div>
+
+  </div>
+  <div class="save-footer">
+    <button class="btn btn-ghost">Reset</button>
+    <button class="btn btn-accent">Save config</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+const ZONE_COLORS = [
+  {hex:'#6c63ff',bg:'rgba(108,99,255,0.15)',lbl:'rgba(108,99,255,0.9)'},
+  {hex:'#22c55e',bg:'rgba(34,197,94,0.15)',lbl:'rgba(34,197,94,0.9)'},
+  {hex:'#f59e0b',bg:'rgba(245,158,11,0.15)',lbl:'rgba(245,158,11,0.9)'},
+  {hex:'#ef4444',bg:'rgba(239,68,68,0.15)',lbl:'rgba(239,68,68,0.9)'},
+  {hex:'#06b6d4',bg:'rgba(6,182,212,0.15)',lbl:'rgba(6,182,212,0.9)'},
+  {hex:'#ec4899',bg:'rgba(236,72,153,0.15)',lbl:'rgba(236,72,153,0.9)'},
+];
+const ALL_FEATURES = ['text','image','sticker','icon'];
+const FEATURE_LABELS = {text:'Text',image:'Image',sticker:'Sticker',icon:'Icon'};
+let enabledFeatures = new Set(['text','image','sticker','icon']);
+
+let zones = [];
+let selectedZoneId = null;
+let tool = 'draw';
+let mode = 'merchant';
+let drawing = false, startX, startY, drawCanvas, drawEl;
+let dragTarget = null, dragOffX = 0, dragOffY = 0;
+let resizing = false, resizeTarget = null;
+let zoneIdCtr = 1;
+
+function uid(){ return 'z'+(zoneIdCtr++); }
+
+// ── Feature toggles ──
+function toggleFeature(name, val) {
+  const card = document.getElementById('fc-'+name);
+  const expand = document.getElementById('fe-'+name);
+  if(val) { enabledFeatures.add(name); card.classList.add('enabled'); expand.classList.remove('hidden'); }
+  else { enabledFeatures.delete(name); card.classList.remove('enabled'); expand.classList.add('hidden'); }
+  document.getElementById('featuresBadge').textContent = enabledFeatures.size;
+  refreshZoneAllowedPanel();
+}
+
+// Chip toggling
+document.querySelectorAll('.chip').forEach(c=>{
+  c.addEventListener('click',()=>c.classList.toggle('on'));
+});
+
+// ── Zones ──
+function addZone() {
+  const z = {
+    id: uid(), name: 'Zone '+(zones.length+1),
+    colorIdx: zones.length % ZONE_COLORS.length,
+    canvas: 'img', x: 30, y: 30, w: 140, h: 90,
+    features: [...enabledFeatures],
+    required: false, maxItems: '3', showBorder: true
+  };
+  zones.push(z);
+  renderAllZones();
+  renderSidebar();
+  selectZone(z.id);
+}
+
+function deleteZone(id, ev) {
+  if(ev) ev.stopPropagation();
+  zones = zones.filter(z=>z.id!==id);
+  if(selectedZoneId===id) { selectedZoneId=null; refreshRightPanel(); }
+  renderAllZones(); renderSidebar();
+}
+
+function deleteSelectedZone() { if(selectedZoneId) deleteZone(selectedZoneId); }
+
+function selectZone(id) {
+  selectedZoneId = id;
+  renderAllZones(); renderSidebar(); refreshRightPanel();
+}
+
+function updateZone() {
+  const z = zones.find(x=>x.id===selectedZoneId); if(!z) return;
+  z.name = document.getElementById('zdName').value || 'Unnamed';
+  z.required = document.getElementById('zdRequired').checked;
+  z.maxItems = document.getElementById('zdMax').value;
+  z.showBorder = document.getElementById('zdBorder').checked;
+  renderSidebar(); refreshZoneCoords(z);
+  document.querySelectorAll('.z-rect[data-id="'+z.id+'"] .z-label').forEach(l=>l.textContent=z.name);
+}
+
+function refreshRightPanel() {
+  const hasZone = !!selectedZoneId;
+  document.getElementById('zoneDetailPanel').style.display = hasZone ? 'block' : 'none';
+  document.getElementById('zoneEmptyPanel').style.display = hasZone ? 'none' : 'block';
+  if(!hasZone) return;
+  const z = zones.find(x=>x.id===selectedZoneId); if(!z) return;
+  document.getElementById('zdName').value = z.name;
+  document.getElementById('zdRequired').checked = z.required;
+  document.getElementById('zdMax').value = z.maxItems;
+  document.getElementById('zdBorder').checked = z.showBorder;
+  refreshZoneCoords(z);
+  buildColorPicker(z);
+  refreshZoneAllowedPanel();
+}
+
+function refreshZoneCoords(z) {
+  document.getElementById('zdX').textContent = z.x+'px';
+  document.getElementById('zdY').textContent = z.y+'px';
+  document.getElementById('zdW').textContent = z.w+'px';
+  document.getElementById('zdH').textContent = z.h+'px';
+}
+
+function buildColorPicker(z) {
+  const el = document.getElementById('zdColors'); el.innerHTML='';
+  ZONE_COLORS.forEach((c,i)=>{
+    const s = document.createElement('div');
+    s.className='cswatch'+(z.colorIdx===i?' active':'');
+    s.style.background=c.hex;
+    s.onclick=()=>{ z.colorIdx=i; buildColorPicker(z); renderAllZones(); };
+    el.appendChild(s);
+  });
+}
+
+function refreshZoneAllowedPanel() {
+  const el = document.getElementById('zdAllowed'); if(!el) return;
+  el.innerHTML='';
+  const z = selectedZoneId ? zones.find(x=>x.id===selectedZoneId) : null;
+  ALL_FEATURES.forEach(f=>{
+    if(!enabledFeatures.has(f)) return;
+    const on = z ? z.features.includes(f) : false;
+    const ch = document.createElement('span');
+    ch.className='allowed-chip'+(on?' on':'');
+    ch.innerHTML='<span class="allowed-chip-dot"></span>'+FEATURE_LABELS[f];
+    ch.onclick=()=>{
+      if(!z) return;
+      if(z.features.includes(f)) z.features=z.features.filter(x=>x!==f);
+      else z.features.push(f);
+      refreshZoneAllowedPanel();
+    };
+    el.appendChild(ch);
+  });
+}
+
+// ── Render zone rects ──
+function getCanvasEl(z) { return z.canvas==='img' ? document.getElementById('imgCanvas') : document.getElementById('bodyCanvas'); }
+
+function renderAllZones() {
+  document.querySelectorAll('.z-rect').forEach(e=>e.remove());
+  zones.forEach(z=>createZoneEl(z));
+}
+
+function createZoneEl(z) {
+  const c = getCanvasEl(z);
+  const col = ZONE_COLORS[z.colorIdx];
+  const el = document.createElement('div');
+  el.className='z-rect'+(selectedZoneId===z.id?' z-selected':'');
+  el.dataset.id=z.id;
+  el.style.cssText=`left:${z.x}px;top:${z.y}px;width:${z.w}px;height:${z.h}px;border-color:${col.hex};background:${col.bg};`;
+
+  const lbl = document.createElement('div');
+  lbl.className='z-label';
+  lbl.style.background=col.lbl; lbl.style.color='#fff';
+  lbl.textContent=z.name;
+  el.appendChild(lbl);
+
+  if(mode==='merchant') {
+    const rh = document.createElement('div');
+    rh.className='z-resize'; rh.dataset.id=z.id;
+    rh.style.color=col.hex;
+    el.appendChild(rh);
+    rh.addEventListener('mousedown',e=>{e.stopPropagation();e.preventDefault();resizing=true;resizeTarget=z;});
+
+    el.addEventListener('mousedown',e=>{
+      if(e.target===rh) return;
+      e.stopPropagation();
+      selectZone(z.id);
+      dragTarget=z;
+      const cr=c.getBoundingClientRect();
+      dragOffX=e.clientX-cr.left-z.x; dragOffY=e.clientY-cr.top-z.y;
+    });
+  } else {
+    el.style.cursor='default'; el.style.pointerEvents='none';
+    if(!z.showBorder) el.style.border='1.5px dashed '+col.hex+'55';
+  }
+  c.appendChild(el);
+}
+
+function renderSidebar() {
+  const el = document.getElementById('sidebarZoneList'); el.innerHTML='';
+  zones.forEach(z=>{
+    const col=ZONE_COLORS[z.colorIdx];
+    const row=document.createElement('div');
+    row.className='nav-item'+(selectedZoneId===z.id?' active':'');
+    row.style.padding='6px 10px'; row.style.marginBottom='2px';
+    row.innerHTML=`<div class="zone-swatch" style="background:${col.hex}"></div><span style="flex:1;font-size:12px">${z.name}</span><button class="zone-del-btn" onclick="deleteZone('${z.id}',event)">×</button>`;
+    row.addEventListener('click',e=>{ if(e.target.classList.contains('zone-del-btn')) return; selectZone(z.id); });
+    el.appendChild(row);
+  });
+}
+
+// ── Drawing ──
+function getCanvasForEvent(e) {
+  const img=document.getElementById('imgCanvas');
+  const body=document.getElementById('bodyCanvas');
+  const ir=img.getBoundingClientRect(), br=body.getBoundingClientRect();
+  if(e.clientX>=ir.left&&e.clientX<=ir.right&&e.clientY>=ir.top&&e.clientY<=ir.bottom) return {el:img,name:'img'};
+  if(e.clientX>=br.left&&e.clientX<=br.right&&e.clientY>=br.top&&e.clientY<=br.bottom) return {el:body,name:'body'};
+  return null;
+}
+
+function startDraw(e, canvasEl, canvasName) {
+  if(mode!=='merchant'||tool!=='draw') return;
+  if(e.target.closest('.z-rect')) return;
+  drawing=true; drawCanvas={el:canvasEl,name:canvasName};
+  const r=canvasEl.getBoundingClientRect();
+  startX=e.clientX-r.left; startY=e.clientY-r.top;
+  drawEl=document.createElement('div');
+  drawEl.className='z-drawing';
+  drawEl.style.cssText=`left:${startX}px;top:${startY}px;width:0;height:0;`;
+  canvasEl.appendChild(drawEl);
+}
+
+document.getElementById('imgCanvas').addEventListener('mousedown',e=>startDraw(e,document.getElementById('imgCanvas'),'img'));
+document.getElementById('bodyCanvas').addEventListener('mousedown',e=>startDraw(e,document.getElementById('bodyCanvas'),'body'));
+
+document.addEventListener('mousemove',e=>{
+  if(drawing&&drawEl) {
+    const r=drawCanvas.el.getBoundingClientRect();
+    const cx=e.clientX-r.left, cy=e.clientY-r.top;
+    const x=Math.min(startX,cx), y=Math.min(startY,cy);
+    drawEl.style.left=x+'px'; drawEl.style.top=y+'px';
+    drawEl.style.width=Math.abs(cx-startX)+'px'; drawEl.style.height=Math.abs(cy-startY)+'px';
+    return;
+  }
+  if(dragTarget) {
+    const c=getCanvasEl(dragTarget), cr=c.getBoundingClientRect();
+    const nx=Math.max(0,Math.min(e.clientX-cr.left-dragOffX,cr.width-dragTarget.w));
+    const ny=Math.max(0,Math.min(e.clientY-cr.top-dragOffY,cr.height-dragTarget.h));
+    dragTarget.x=Math.round(nx); dragTarget.y=Math.round(ny);
+    const el=document.querySelector('.z-rect[data-id="'+dragTarget.id+'"]');
+    if(el){el.style.left=dragTarget.x+'px';el.style.top=dragTarget.y+'px';}
+    refreshZoneCoords(dragTarget); return;
+  }
+  if(resizing&&resizeTarget) {
+    const c=getCanvasEl(resizeTarget), cr=c.getBoundingClientRect();
+    resizeTarget.w=Math.max(40,Math.round(e.clientX-cr.left-resizeTarget.x));
+    resizeTarget.h=Math.max(24,Math.round(e.clientY-cr.top-resizeTarget.y));
+    const el=document.querySelector('.z-rect[data-id="'+resizeTarget.id+'"]');
+    if(el){el.style.width=resizeTarget.w+'px';el.style.height=resizeTarget.h+'px';}
+    refreshZoneCoords(resizeTarget);
+  }
+});
+
+document.addEventListener('mouseup',e=>{
+  if(drawing) {
+    drawing=false;
+    if(drawEl) {
+      const w=parseInt(drawEl.style.width)||0, h=parseInt(drawEl.style.height)||0;
+      const x=parseInt(drawEl.style.left)||0, y=parseInt(drawEl.style.top)||0;
+      drawEl.remove(); drawEl=null;
+      if(w>24&&h>18) {
+        const z={
+          id:uid(), name:'Zone '+(zones.length+1),
+          colorIdx:zones.length%ZONE_COLORS.length,
+          canvas:drawCanvas.name, x,y,w,h,
+          features:[...enabledFeatures],
+          required:false, maxItems:'3', showBorder:true
+        };
+        zones.push(z);
+        renderAllZones(); renderSidebar(); selectZone(z.id);
+      }
+    }
+    return;
+  }
+  dragTarget=null; resizing=false; resizeTarget=null;
+});
+
+// ── Mode / tool ──
+function setTool(t) {
+  tool=t;
+  document.getElementById('tbDraw').classList.toggle('active',t==='draw');
+  document.getElementById('tbSelect').classList.toggle('active',t==='select');
+  const hint=document.getElementById('canvasHint');
+  hint.textContent=t==='draw'?'Draw rectangles on the product to define buyer zones':'Click a zone to select · drag to move · drag corner to resize';
+}
+
+function setMode(m) {
+  mode=m;
+  document.getElementById('segMerchant').classList.toggle('active',m==='merchant');
+  document.getElementById('segBuyer').classList.toggle('active',m==='buyer');
+  renderAllZones();
+  if(m==='buyer') {
+    selectedZoneId=null; refreshRightPanel();
+    document.getElementById('canvasHint').textContent='Buyer view — zones are locked';
+  } else {
+    document.getElementById('canvasHint').textContent='Draw rectangles on the product to define buyer zones';
+  }
+}
+
+function setPage(el, page) {
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  el.classList.add('active');
+  if(page==='buyer') setMode('buyer');
+  else setMode('merchant');
+}
+
+function fitView() { /* placeholder */ }
+
+// ── Seed zones ──
+zones.push({id:uid(),name:'Front print',colorIdx:0,canvas:'img',x:55,y:70,w:180,h:120,features:['text','image','sticker','icon'],required:false,maxItems:'3',showBorder:true});
+zones.push({id:uid(),name:'Name text',colorIdx:1,canvas:'body',x:12,y:8,w:230,h:44,features:['text'],required:true,maxItems:'1',showBorder:true});
+renderAllZones(); renderSidebar();
+</script>
+</body>
+</html>

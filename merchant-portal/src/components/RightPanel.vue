@@ -1,15 +1,27 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FeatureCard from './FeatureCard.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import { useEditorState, ZONE_COLORS, ALL_FEATURES, FEATURE_LABELS } from '@/composables/useEditorState'
 
 const {
   selectedZone,
+  selectedZoneId,
   enabledFeatures,
   toggleFeature,
   deleteZone,
 } = useEditorState()
+
+const zoneDetailRef = ref<HTMLElement | null>(null)
+const zoneNameInputRef = ref<HTMLInputElement | null>(null)
+
+watch(selectedZoneId, async (newId) => {
+  if (!newId) return
+  await nextTick()
+  zoneDetailRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  zoneNameInputRef.value?.focus()
+  zoneNameInputRef.value?.select()
+})
 
 // Chip active state for sub-options (keyed by feature + chip label)
 const activeChips = ref<Record<string, boolean>>({
@@ -83,9 +95,9 @@ function toggleZoneFeature(feature: string) {
         >
           <template #icon>
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <rect x="1" y="2.5" width="13" height="10" rx="2" stroke="#8a8a94" stroke-width="1.2"/>
-              <circle cx="5" cy="6.5" r="1.2" fill="#8a8a94"/>
-              <path d="M1.5 11l3.5-3.5 2.5 2.5 2-2 4 4" stroke="#8a8a94" stroke-width="1.2" stroke-linecap="round"/>
+              <rect x="1" y="2.5" width="13" height="10" rx="2" stroke="var(--text2)" stroke-width="1.2"/>
+              <circle cx="5" cy="6.5" r="1.2" fill="var(--text2)"/>
+              <path d="M1.5 11l3.5-3.5 2.5 2.5 2-2 4 4" stroke="var(--text2)" stroke-width="1.2" stroke-linecap="round"/>
             </svg>
           </template>
           <div class="sub-option">
@@ -119,10 +131,10 @@ function toggleZoneFeature(feature: string) {
         >
           <template #icon>
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <circle cx="7.5" cy="7.5" r="6" stroke="#8a8a94" stroke-width="1.2"/>
-              <path d="M5 8.5c.6 1 2.4 1 3 0" stroke="#8a8a94" stroke-width="1.1" stroke-linecap="round"/>
-              <circle cx="5.5" cy="6" r=".8" fill="#8a8a94"/>
-              <circle cx="9.5" cy="6" r=".8" fill="#8a8a94"/>
+              <circle cx="7.5" cy="7.5" r="6" stroke="var(--text2)" stroke-width="1.2"/>
+              <path d="M5 8.5c.6 1 2.4 1 3 0" stroke="var(--text2)" stroke-width="1.1" stroke-linecap="round"/>
+              <circle cx="5.5" cy="6" r=".8" fill="var(--text2)"/>
+              <circle cx="9.5" cy="6" r=".8" fill="var(--text2)"/>
             </svg>
           </template>
           <div class="sub-option">
@@ -156,7 +168,7 @@ function toggleZoneFeature(feature: string) {
         >
           <template #icon>
             <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-              <polygon points="7.5,1.5 9.5,5.5 14,6 10.5,9.5 11.5,14 7.5,11.5 3.5,14 4.5,9.5 1,6 5.5,5.5" stroke="#8a8a94" stroke-width="1.1" stroke-linejoin="round"/>
+              <polygon points="7.5,1.5 9.5,5.5 14,6 10.5,9.5 11.5,14 7.5,11.5 3.5,14 4.5,9.5 1,6 5.5,5.5" stroke="var(--text2)" stroke-width="1.1" stroke-linejoin="round"/>
             </svg>
           </template>
           <div class="sub-option">
@@ -180,11 +192,11 @@ function toggleZoneFeature(feature: string) {
 
       <!-- Zone detail panel -->
       <template v-if="selectedZone">
-        <div class="zd-panel">
+        <div class="zd-panel" ref="zoneDetailRef">
           <div class="zd-title">Selected zone</div>
           <div class="zd-row">
             <span class="zd-key">Name</span>
-            <input class="zd-input" v-model="selectedZone.name" placeholder="Zone name">
+            <input class="zd-input" ref="zoneNameInputRef" v-model="selectedZone.name" placeholder="Zone name">
           </div>
           <div class="zd-row">
             <span class="zd-key">Color</span>

@@ -12,13 +12,36 @@ const {
   deleteZone,
 } = useEditorState()
 
+const rightScrollRef = ref<HTMLElement | null>(null)
 const zoneDetailRef = ref<HTMLElement | null>(null)
 const zoneNameInputRef = ref<HTMLInputElement | null>(null)
+
+function scrollToElement(container: HTMLElement, target: HTMLElement, duration = 750) {
+  const start = container.scrollTop
+  const end = Math.max(
+    0,
+    Math.min(
+      target.getBoundingClientRect().top - container.getBoundingClientRect().top + start - 32,
+      container.scrollHeight - container.clientHeight,
+    ),
+  )
+  if (Math.abs(end - start) < 2) return
+  const startTime = performance.now()
+  function step(now: number) {
+    const t = Math.min((now - startTime) / duration, 1)
+    // ease-out quart: fast start, slow deceleration into target
+    container.scrollTop = start + (end - start) * (1 - Math.pow(1 - t, 4))
+    if (t < 1) requestAnimationFrame(step)
+  }
+  requestAnimationFrame(step)
+}
 
 watch(selectedZoneId, async (newId) => {
   if (!newId) return
   await nextTick()
-  zoneDetailRef.value?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+  if (rightScrollRef.value && zoneDetailRef.value) {
+    scrollToElement(rightScrollRef.value, zoneDetailRef.value)
+  }
   zoneNameInputRef.value?.focus()
   zoneNameInputRef.value?.select()
 })
@@ -46,7 +69,7 @@ function toggleZoneFeature(feature: string) {
 
 <template>
   <div class="right-col">
-    <div class="right-scroll">
+    <div class="right-scroll" ref="rightScrollRef">
 
       <!-- Design features -->
       <div class="rp-section">

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import {
   useEditorState,
   ZONE_COLORS,
@@ -20,6 +20,25 @@ const {
 
 const imgCanvasRef = ref<HTMLElement | null>(null);
 const bodyCanvasRef = ref<HTMLElement | null>(null);
+
+// Track newly created zone for entrance animation
+const newZoneId = ref<string | null>(null);
+let newZoneTimer: ReturnType<typeof setTimeout> | null = null;
+
+watch(
+  () => zones.value.length,
+  async (newLen, oldLen) => {
+    if (newLen <= oldLen) return;
+    const newest = zones.value[newLen - 1];
+    newZoneId.value = newest.id;
+    if (newZoneTimer) clearTimeout(newZoneTimer);
+    newZoneTimer = setTimeout(() => { newZoneId.value = null; }, 700);
+    // Scroll the new zone into view (useful when created via the sidebar button)
+    await nextTick();
+    const el = document.querySelector(`[data-zone-id="${newest.id}"]`) as HTMLElement | null;
+    el?.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+  },
+);
 
 // Drawing state
 let isDrawing = false;
@@ -260,13 +279,13 @@ onUnmounted(() => {
                     width="18"
                     height="14"
                     rx="2.5"
-                    stroke="#55555f"
+                    stroke="var(--text3)"
                     stroke-width="1.3"
                   />
-                  <circle cx="8" cy="9.5" r="1.8" fill="#55555f" />
+                  <circle cx="8" cy="9.5" r="1.8" fill="var(--text3)" />
                   <path
                     d="M2 15l5-4.5 3.5 3.5 3-2.5 6.5 5.5"
-                    stroke="#55555f"
+                    stroke="var(--text3)"
                     stroke-width="1.3"
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -293,7 +312,8 @@ onUnmounted(() => {
               v-for="zone in zones.filter((z) => z.canvas === 'img')"
               :key="zone.id"
               class="z-rect"
-              :class="{ 'z-selected': selectedZoneId === zone.id }"
+              :class="{ 'z-selected': selectedZoneId === zone.id, 'z-new': newZoneId === zone.id }"
+              :data-zone-id="zone.id"
               :style="{
                 left: zone.x + 'px',
                 top: zone.y + 'px',

@@ -158,6 +158,7 @@ body {
 .z-rect { position: absolute; border: 2px solid; border-radius: 5px; cursor: move; transition: box-shadow 0.12s; }
 .z-rect:hover { box-shadow: 0 0 0 3px rgba(0,0,0,0.06); }
 .z-rect.z-selected { box-shadow: 0 0 0 2px rgba(0,0,0,0.08), 0 0 0 4px var(--accent-border); }
+.z-rect.z-dragging { box-shadow: 0 4px 16px rgba(0,0,0,0.14), 0 0 0 2px rgba(0,0,0,0.06); opacity: 0.9; }
 @keyframes z-born {
   0%   { outline: 3px solid rgba(44,110,203,0.75); outline-offset: 0px; }
   100% { outline: 3px solid rgba(44,110,203,0); outline-offset: 12px; }

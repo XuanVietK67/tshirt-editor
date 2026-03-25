@@ -1,0 +1,42 @@
+{% assign config = product.metafields.personalizer.config.value %}
+
+{% if 
+  config == blank or config.enabled == true %}
+  <button id="personalize-btn" style="margin-top: 10px;">
+    🎨 Customize Design
+  </button>
+{% endif %}
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("personalize-btn");
+
+    if (btn) {
+      btn.addEventListener("click", function () {
+        const productId = {{ product.id }};
+        // alert("Open personalizer for product " + productId);
+
+        const url = `http://localhost:5174?productId=${productId}`;
+
+        window.location.href = url;
+
+        // window.location.href = `/apps/personalizer?productId=${productId}`;
+      });
+    }
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Personalize Button",
+  "target": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "🎨 Customize Design"
+    }
+  ]
+}
+{% endschema %}

@@ -226,6 +226,20 @@ body {
 .zd-input { font-size: 12px; padding: 4px 8px; background: var(--surface3); color: var(--text); border: 1px solid var(--border2); border-radius: var(--radius-sm); font-family: var(--sans); width: 130px; }
 .zd-input:focus { outline: none; border-color: var(--accent); }
 
+/* Zone transform grid */
+.zd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px; }
+.zd-field { display: flex; flex-direction: column; gap: 3px; }
+.zd-field-label { font-size: 10.5px; font-weight: 500; color: var(--text2); display: flex; align-items: center; gap: 4px; }
+.zd-num-wrap { position: relative; }
+.zd-num-input { width: 100%; padding: 5px 26px 5px 8px; font-size: 12px; font-family: var(--mono); background: var(--surface3); color: var(--text); border: 1px solid var(--border2); border-radius: var(--radius-sm); appearance: textfield; }
+.zd-num-input::-webkit-inner-spin-button,
+.zd-num-input::-webkit-outer-spin-button { -webkit-appearance: none; }
+.zd-num-input:focus { outline: none; border-color: var(--accent); background: var(--surface); }
+.zd-num-unit { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text3); pointer-events: none; font-family: var(--mono); }
+.zd-rotation-row { grid-column: 1 / -1; }
+.zd-origin-note { display: flex; align-items: flex-start; gap: 6px; font-size: 10.5px; color: var(--text3); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px; margin-top: 2px; line-height: 1.5; }
+.zd-origin-note svg { flex-shrink: 0; margin-top: 1px; }
+
 /* Color swatches */
 .color-row { display: flex; gap: 5px; flex-wrap: wrap; }
 .cswatch { width: 20px; height: 20px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.1s; }

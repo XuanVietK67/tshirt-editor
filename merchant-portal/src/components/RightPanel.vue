@@ -234,10 +234,101 @@ function toggleZoneFeature(feature: string) {
               ></div>
             </div>
           </div>
-          <div class="zd-row"><span class="zd-key">X</span><span class="zd-val">{{ selectedZone.x }}px</span></div>
-          <div class="zd-row"><span class="zd-key">Y</span><span class="zd-val">{{ selectedZone.y }}px</span></div>
-          <div class="zd-row"><span class="zd-key">W</span><span class="zd-val">{{ selectedZone.w }}px</span></div>
-          <div class="zd-row"><span class="zd-key">H</span><span class="zd-val">{{ selectedZone.h }}px</span></div>
+        </div>
+
+        <!-- Transform: position, size, rotation -->
+        <div class="zd-panel" ref="zoneDetailRef">
+          <div class="zd-title">Transform</div>
+          <div class="zd-grid">
+            <!-- X -->
+            <div class="zd-field">
+              <span class="zd-field-label">X</span>
+              <div class="zd-num-wrap">
+                <input
+                  type="number"
+                  class="zd-num-input"
+                  :value="selectedZone.x"
+                  step="1"
+                  @input="selectedZone.x = Math.round(Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="zd-num-unit">px</span>
+              </div>
+            </div>
+            <!-- Y -->
+            <div class="zd-field">
+              <span class="zd-field-label">Y</span>
+              <div class="zd-num-wrap">
+                <input
+                  type="number"
+                  class="zd-num-input"
+                  :value="selectedZone.y"
+                  step="1"
+                  @input="selectedZone.y = Math.round(Number(($event.target as HTMLInputElement).value))"
+                />
+                <span class="zd-num-unit">px</span>
+              </div>
+            </div>
+            <!-- W -->
+            <div class="zd-field">
+              <span class="zd-field-label">W</span>
+              <div class="zd-num-wrap">
+                <input
+                  type="number"
+                  class="zd-num-input"
+                  :value="selectedZone.w"
+                  step="1"
+                  min="40"
+                  @change="selectedZone.w = Math.max(40, Math.round(Number(($event.target as HTMLInputElement).value)))"
+                />
+                <span class="zd-num-unit">px</span>
+              </div>
+            </div>
+            <!-- H -->
+            <div class="zd-field">
+              <span class="zd-field-label">H</span>
+              <div class="zd-num-wrap">
+                <input
+                  type="number"
+                  class="zd-num-input"
+                  :value="selectedZone.h"
+                  step="1"
+                  min="24"
+                  @change="selectedZone.h = Math.max(24, Math.round(Number(($event.target as HTMLInputElement).value)))"
+                />
+                <span class="zd-num-unit">px</span>
+              </div>
+            </div>
+            <!-- Rotation -->
+            <div class="zd-field zd-rotation-row">
+              <span class="zd-field-label">
+                <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
+                  <path d="M9.5 5.5a4 4 0 1 1-1.17-2.83" stroke="var(--text2)" stroke-width="1.2" stroke-linecap="round"/>
+                  <path d="M8.33 2.67V5h2.34" stroke="var(--text2)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Rotation
+              </span>
+              <div class="zd-num-wrap">
+                <input
+                  type="number"
+                  class="zd-num-input"
+                  :value="selectedZone.rotation"
+                  step="1"
+                  @input="selectedZone.rotation = Number(($event.target as HTMLInputElement).value)"
+                />
+                <span class="zd-num-unit">°</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Origin note — only shown when zone is rotated -->
+          <div v-if="selectedZone.rotation !== 0" class="zd-origin-note">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <circle cx="6" cy="6" r="5" stroke="var(--text3)" stroke-width="1.1"/>
+              <line x1="6" y1="4" x2="6" y2="6.5" stroke="var(--text3)" stroke-width="1.2" stroke-linecap="round"/>
+              <circle cx="6" cy="8.5" r=".7" fill="var(--text3)"/>
+            </svg>
+            X / Y mark the top-left corner of the zone's unrotated bounding box. Rotation is applied around that origin.
+          </div>
         </div>
 
         <div class="zd-panel">

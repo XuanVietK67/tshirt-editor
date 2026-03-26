@@ -107,7 +107,7 @@ export const loader = async ({ request }) => {
 
 
 ### Adding new feature or fix some bugs
-**IMPORTANT**: When you work on a new feature, create a new git branch first. Then work on changes in that branch for the reminder of the session, and if you fixBug please checkout to brand fixBug and work on it
+**IMPORTANT**: When you work on a new feature, create a new git branch first. Then work on changes in that branch for the reminder of the session, and if you fixBug please checkout to brand fixBug/name_of_bug and work on it
 
 ### Adding New Shopify API Scopes
 

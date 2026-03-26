@@ -181,16 +181,42 @@ body {
 .rp-head { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px; }
 
 /* Feature cards */
-.feature-card { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; transition: all 0.12s; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-.feature-card.enabled { border-color: var(--accent-border); background: var(--accent-bg); }
+.feature-card {
+  --card-color: var(--accent);
+  background: var(--surface);
+  border: 1px solid var(--border2);
+  border-left: 3px solid transparent;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 8px;
+  transition: border-color 0.15s, background 0.15s;
+  box-shadow: 0 1px 0 var(--border);
+}
+.feature-card.enabled {
+  border-color: color-mix(in srgb, var(--card-color) 28%, transparent);
+  border-left-color: var(--card-color);
+  background: color-mix(in srgb, var(--card-color) 5%, white);
+}
 .feature-header { display: flex; align-items: center; gap: 10px; }
-.feature-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; background: var(--surface3); font-size: 15px; }
-.feature-card.enabled .feature-icon { background: var(--accent-bg); }
+.feature-icon {
+  width: 34px; height: 34px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  background: var(--surface3);
+  color: var(--text3);
+  font-size: 15px; font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+.feature-card.enabled .feature-icon {
+  background: color-mix(in srgb, var(--card-color) 12%, white);
+  color: var(--card-color);
+  border: 1px solid color-mix(in srgb, var(--card-color) 22%, transparent);
+}
 .feature-info { flex: 1; }
-.feature-name { font-size: 12.5px; font-weight: 500; color: var(--text); }
+.feature-name { font-size: 12.5px; font-weight: 500; color: var(--text); transition: color 0.15s; }
 .feature-desc { font-size: 11px; color: var(--text2); margin-top: 1px; }
-.feature-card.enabled .feature-name { color: var(--accent2); }
-.feature-expand { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); }
+.feature-card.enabled .feature-name { color: color-mix(in srgb, var(--card-color) 90%, #000); font-weight: 600; }
+.feature-expand { margin-top: 12px; padding-top: 10px; border-top: 1px solid color-mix(in srgb, var(--card-color) 15%, transparent); }
 .feature-expand.hidden { display: none; }
 
 /* Toggle switch */
@@ -199,7 +225,7 @@ body {
 .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
 .toggle-track { position: absolute; inset: 0; background: var(--surface3); border-radius: 19px; border: 1px solid var(--border2); cursor: pointer; transition: all 0.15s; }
 .toggle-thumb { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: var(--text2); transition: all 0.15s; pointer-events: none; }
-.toggle input:checked ~ .toggle-track { background: var(--accent); border-color: var(--accent); }
+.toggle input:checked ~ .toggle-track { background: var(--card-color, var(--accent)); border-color: var(--card-color, var(--accent)); }
 .toggle input:checked ~ .toggle-thumb { left: 17px; background: white; }
 
 /* Sub-options */
@@ -208,7 +234,7 @@ body {
 .sub-select { font-size: 11px; padding: 4px 8px; background: var(--surface3); color: var(--text); border: 1px solid var(--border2); border-radius: var(--radius-sm); font-family: var(--sans); cursor: pointer; }
 .sub-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
 .chip { font-size: 10.5px; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface3); color: var(--text2); cursor: pointer; font-family: var(--mono); transition: all 0.12s; }
-.chip.on { background: var(--accent-bg); border-color: var(--accent-border); color: var(--accent2); }
+.chip.on { background: color-mix(in srgb, var(--card-color) 10%, white); border-color: color-mix(in srgb, var(--card-color) 30%, transparent); color: color-mix(in srgb, var(--card-color) 90%, #000); }
 
 /* Zone list in sidebar */
 .zone-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }

@@ -245,6 +245,7 @@ const vertices = computed(() => {
         <FeatureCard
           name="Text"
           description="Custom text &amp; typography"
+          color="#0070d2"
           :enabled="enabledFeatures.has('text')"
           @toggle="toggleFeature('text', $event)"
         >
@@ -288,6 +289,7 @@ const vertices = computed(() => {
         <FeatureCard
           name="Image upload"
           description="Buyer uploads their photo"
+          color="#007e6b"
           :enabled="enabledFeatures.has('image')"
           @toggle="toggleFeature('image', $event)"
         >
@@ -336,6 +338,7 @@ const vertices = computed(() => {
         <FeatureCard
           name="Stickers"
           description="Pre-made decorative stickers"
+          color="#c05717"
           :enabled="enabledFeatures.has('sticker')"
           @toggle="toggleFeature('sticker', $event)"
         >
@@ -378,6 +381,7 @@ const vertices = computed(() => {
         <FeatureCard
           name="Icons"
           description="Vector icon library"
+          color="#5243c2"
           :enabled="enabledFeatures.has('icon')"
           @toggle="toggleFeature('icon', $event)"
         >

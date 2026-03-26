@@ -34,17 +34,17 @@ function removePhoto() { setProductImage(null); }
 
 // ── Stage dimensions (responsive) ────────────────────────────
 const stageContainerRef = ref<HTMLDivElement | null>(null);
-const stageW = ref(400);
-const STAGE_H = 280;
+const stageW = ref(520);
+const STAGE_H = 420;
 
 let ro: ResizeObserver | null = null;
 onMounted(() => {
   if (stageContainerRef.value) {
     ro = new ResizeObserver((entries) => {
-      stageW.value = entries[0].contentRect.width || 400;
+      stageW.value = entries[0].contentRect.width || 520;
     });
     ro.observe(stageContainerRef.value);
-    stageW.value = stageContainerRef.value.clientWidth || 400;
+    stageW.value = stageContainerRef.value.clientWidth || 520;
   }
 });
 onUnmounted(() => ro?.disconnect());

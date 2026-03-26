@@ -143,8 +143,8 @@ body {
 
 .canvas-body { flex: 1; overflow: auto; min-height: 0; display: flex; flex-direction: column; }
 .canvas-inner { flex: 1; min-height: min-content; display: flex; align-items: center; justify-content: center; padding: 24px; }
-.product-stage { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-lg); width: 400px; flex-shrink: 0; overflow: hidden; position: relative; }
-.konva-stage-wrap { position: relative; height: 280px; background: var(--surface2); overflow: hidden; user-select: none; }
+.product-stage { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-lg); width: 520px; flex-shrink: 0; overflow: hidden; position: relative; }
+.konva-stage-wrap { position: relative; height: 420px; background: var(--surface2); overflow: hidden; user-select: none; }
 .product-img-bg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; pointer-events: none; }
 .product-img-photo { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; user-select: none; }
 .product-img-controls { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; z-index: 10; }
@@ -342,7 +342,7 @@ body {
 
   /* Product stage: full width within canvas */
   .canvas-inner { padding: 16px; }
-  .product-stage { width: 100%; max-width: 400px; }
+  .product-stage { width: 100%; max-width: 520px; }
 }
 
 /* ══════════════════════════════════════════
@@ -387,7 +387,7 @@ body {
   /* Product stage: full-width */
   .canvas-inner { padding: 12px; align-items: flex-start; }
   .product-stage { width: 100%; max-width: 100%; }
-  .konva-stage-wrap { height: 220px; }
+  .konva-stage-wrap { height: 320px; }
 
   /* Right panel: scroll within the panel */
   .right-col { overflow-y: auto; }

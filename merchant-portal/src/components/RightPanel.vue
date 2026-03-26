@@ -5,11 +5,15 @@ import ToggleSwitch from './ToggleSwitch.vue'
 import { useEditorState, ZONE_COLORS, ALL_FEATURES, FEATURE_LABELS, STAGE_W, STAGE_H, computeZoneBounds, computeWMax, computeHMax } from '@/composables/useEditorState'
 
 const {
+  zones,
   selectedZone,
   selectedZoneId,
   enabledFeatures,
   toggleFeature,
   deleteZone,
+  productImage,
+  tool,
+  mode,
 } = useEditorState()
 
 const rightScrollRef = ref<HTMLElement | null>(null)
@@ -129,6 +133,82 @@ function applyField(field: string, raw: string, el: HTMLInputElement) {
 function preventTyping(e: KeyboardEvent) {
   const allowed = new Set(['ArrowUp', 'ArrowDown', 'Tab', 'Escape'])
   if (!allowed.has(e.key)) e.preventDefault()
+}
+
+function saveConfig() {
+  const config = {
+    canvas: {
+      width: STAGE_W,
+      height: STAGE_H,
+      hasProductImage: !!productImage.value,
+      productImage: productImage.value,
+      zoneCount: zones.value.length,
+      activeTool: tool.value,
+      mode: mode.value,
+    },
+    enabledFeatures: [...enabledFeatures.value],
+    features: {
+      text: {
+        maxChars: featureSettings.value.textMaxChars,
+        maxLines: featureSettings.value.textMaxLines,
+        allowedFonts: ['Serif', 'Sans-serif', 'Script', 'Display', 'Mono'].filter(
+          (f) => activeChips.value['text-' + f],
+        ),
+        allowedStyles: ['Bold', 'Italic', 'Outline', 'Shadow', 'Color'].filter(
+          (s) => activeChips.value['text-' + s],
+        ),
+      },
+      image: {
+        acceptedFormats: featureSettings.value.imageFormats,
+        maxSize: featureSettings.value.imageMaxSize,
+        maxImages: featureSettings.value.imageMaxImages,
+        editTools: ['Crop', 'Resize', 'Rotate', 'Flip', 'Filters'].filter(
+          (t) => activeChips.value['image-' + t],
+        ),
+      },
+      sticker: {
+        maxPerZone: featureSettings.value.stickerMax,
+        allowedCategories: ['Nature', 'Shapes', 'Animals', 'Food', 'Symbols', 'Seasonal'].filter(
+          (c) => activeChips.value['sticker-' + c],
+        ),
+      },
+      icon: {
+        library: featureSettings.value.iconLibrary,
+        maxPerZone: featureSettings.value.iconMax,
+        buyerCanChange: ['Color', 'Size', 'Rotation', 'Style'].filter(
+          (p) => activeChips.value['icon-' + p],
+        ),
+      },
+    },
+    zones: zones.value.map((z) => {
+      const θ = (z.rotation * Math.PI) / 180
+      const cos = Math.cos(θ), sin = Math.sin(θ)
+      function pt(lx: number, ly: number) {
+        return { x: Math.round(z.x + lx * cos - ly * sin), y: Math.round(z.y + lx * sin + ly * cos) }
+      }
+      return {
+        id: z.id,
+        name: z.name,
+        color: ZONE_COLORS[z.colorIdx].hex,
+        x: z.x,
+        y: z.y,
+        w: z.w,
+        h: z.h,
+        rotation: z.rotation,
+        coordinates: {
+          tl: pt(0, 0),
+          tr: pt(z.w, 0),
+          br: pt(z.w, z.h),
+          bl: pt(0, z.h),
+        },
+        features: [...z.features],
+        required: z.required,
+        maxItems: z.maxItems,
+        showBorder: z.showBorder,
+      }
+    }),
+  }
+  console.log('Design config:', config)
 }
 
 const vertices = computed(() => {
@@ -576,7 +656,7 @@ const vertices = computed(() => {
 
     <div class="save-footer">
       <button class="btn btn-ghost">Reset</button>
-      <button class="btn btn-accent">Save config</button>
+      <button class="btn btn-accent" @click="saveConfig">Save config</button>
     </div>
   </div>
 </template>

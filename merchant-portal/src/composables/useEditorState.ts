@@ -15,6 +15,7 @@ export interface Zone {
   y: number;
   w: number;
   h: number;
+  rotation: number;
   features: string[];
   required: boolean;
   maxItems: string;
@@ -77,6 +78,7 @@ export function useEditorState() {
       y,
       w,
       h,
+      rotation: 0,
       features: [...enabledFeatures.value],
       required: false,
       maxItems: "3",

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from "vue";
+import { ref, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import Konva from "konva";
 import {
   useEditorState,
@@ -76,8 +76,11 @@ function zoneGroupConfig(zone: Zone) {
   return {
     x: zone.x,
     y: zone.y,
+    rotation: zone.rotation,
     draggable: mode.value === "merchant",
     id: zone.id,
+    scaleX: 1,
+    scaleY: 1,
   };
 }
 
@@ -119,17 +122,6 @@ function zoneLabelTextConfig(zone: Zone) {
   };
 }
 
-function resizeHandleConfig(zone: Zone) {
-  return {
-    x: zone.w - 14,
-    y: zone.h - 14,
-    width: 14,
-    height: 14,
-    fill: "transparent",
-    name: "resize-handle",
-  };
-}
-
 // ── Zone drag ─────────────────────────────────────────────────
 const isDragging = ref(false);
 
@@ -157,37 +149,59 @@ function onZoneDragend(e: { target: Konva.Group }, zone: Zone) {
   isDragging.value = false;
 }
 
-// ── Zone resize ───────────────────────────────────────────────
-let resizingZone: Zone | null = null;
-let resizePointerStartX = 0;
-let resizePointerStartY = 0;
-let resizeInitW = 0;
-let resizeInitH = 0;
+// ── Transformer (resize + rotate) ────────────────────────────
+const transformerRef = ref<{ getNode(): Konva.Transformer } | null>(null);
 
-function onResizePointerdown(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>, zone: Zone) {
-  e.cancelBubble = true;
-  resizingZone = zone;
-  const pos = e.target.getStage()!.getPointerPosition()!;
-  resizePointerStartX = pos.x;
-  resizePointerStartY = pos.y;
-  resizeInitW = zone.w;
-  resizeInitH = zone.h;
+const transformerConfig = computed(() => ({
+  rotateEnabled: mode.value === "merchant",
+  resizeEnabled: mode.value === "merchant",
+  keepRatio: false,
+  borderStroke: "#2c6ecb",
+  borderStrokeWidth: 1.5,
+  anchorStroke: "#2c6ecb",
+  anchorFill: "#ffffff",
+  anchorSize: 8,
+  anchorCornerRadius: 2,
+  rotateAnchorOffset: 26,
+}));
+
+function attachTransformer(id: string | null) {
+  const tr = transformerRef.value?.getNode();
+  if (!tr) return;
+  if (!id || mode.value !== "merchant") {
+    tr.nodes([]);
+  } else {
+    const node = tr.getStage()?.findOne("#" + id) as Konva.Group | undefined;
+    tr.nodes(node ? [node] : []);
+  }
+  tr.getLayer()?.batchDraw();
 }
 
-function onStageMousedelta(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
-  if (!resizingZone) return;
-  const stage = e.target.getStage();
-  if (!stage) return;
-  const pos = stage.getPointerPosition();
-  if (!pos) return;
-  const dx = pos.x - resizePointerStartX;
-  const dy = pos.y - resizePointerStartY;
-  resizingZone.w = Math.max(40, Math.round(resizeInitW + dx));
-  resizingZone.h = Math.max(24, Math.round(resizeInitH + dy));
+watch(selectedZoneId, async (id) => {
+  await nextTick();
+  attachTransformer(id);
+});
+
+watch(() => mode.value, async () => {
+  await nextTick();
+  attachTransformer(selectedZoneId.value);
+});
+
+function onZoneTransformend(e: Konva.KonvaEventObject<Event>, zone: Zone) {
+  const node = e.target as Konva.Group;
+  const scaleX = node.scaleX();
+  const scaleY = node.scaleY();
+  zone.w = Math.max(40, Math.round(zone.w * Math.abs(scaleX)));
+  zone.h = Math.max(24, Math.round(zone.h * Math.abs(scaleY)));
+  zone.x = Math.round(node.x());
+  zone.y = Math.round(node.y());
+  zone.rotation = Math.round(node.rotation() * 10) / 10;
+  // Reset scale so the zone rect uses the updated pixel dimensions
+  node.scaleX(1);
+  node.scaleY(1);
 }
 
 function onStageMouseup() {
-  resizingZone = null;
   if (isDrawing.value) finishDraw();
 }
 
@@ -226,7 +240,6 @@ function onStageMousedown(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
 }
 
 function onStageMousemove(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
-  onStageMousedelta(e);
   if (!isDrawing.value) return;
   const stage = e.target.getStage();
   if (!stage) return;
@@ -264,7 +277,7 @@ const canvasHint = computed(() => {
   if (mode.value === "buyer") return "Buyer view — zones are locked";
   if (tool.value === "draw")
     return "Click a zone to select · drag to move · draw on canvas to add a zone";
-  return "Click a zone to select · drag to move · drag corner to resize";
+  return "Click a zone to select · drag to move · handles to resize or rotate";
 });
 </script>
 
@@ -380,6 +393,7 @@ const canvasHint = computed(() => {
                   @dragstart="onZoneDragstart(zone)"
                   @dragmove="onZoneDragmove($event, zone)"
                   @dragend="onZoneDragend($event, zone)"
+                  @transformend="onZoneTransformend($event, zone)"
                 >
                   <!-- Zone background -->
                   <v-rect :config="zoneRectConfig(zone)" />
@@ -389,15 +403,10 @@ const canvasHint = computed(() => {
                     <v-tag :config="zoneLabelTagConfig(zone)" />
                     <v-text :config="zoneLabelTextConfig(zone)" />
                   </v-label>
-
-                  <!-- Resize handle (bottom-right corner) -->
-                  <v-rect
-                    v-if="mode === 'merchant'"
-                    :config="resizeHandleConfig(zone)"
-                    @mousedown="onResizePointerdown($event, zone)"
-                    @touchstart="onResizePointerdown($event, zone)"
-                  />
                 </v-group>
+
+                <!-- Transformer: resize + rotate handles for selected zone -->
+                <v-transformer ref="transformerRef" :config="transformerConfig" />
               </v-layer>
             </v-stage>
           </div>

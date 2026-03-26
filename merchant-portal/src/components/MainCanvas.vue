@@ -125,6 +125,37 @@ function zoneLabelTextConfig(zone: Zone) {
 // ── Zone drag ─────────────────────────────────────────────────
 const isDragging = ref(false);
 
+/**
+ * Clamp the group origin so every rotated corner stays inside the stage.
+ *
+ * For a group at (gx, gy) rotated by θ the four corners sit at offsets:
+ *   TL (0,0)  TR (w·cosθ, w·sinθ)
+ *   BL (−h·sinθ, h·cosθ)  BR (w·cosθ−h·sinθ, w·sinθ+h·cosθ)
+ *
+ * We find the AABB of those offsets, then require:
+ *   gx ∈ [−minDx, stageW − maxDx]
+ *   gy ∈ [−minDy, stageH − maxDy]
+ */
+function clampGroupPos(gx: number, gy: number, zone: Zone) {
+  const θ = (zone.rotation * Math.PI) / 180;
+  const cos = Math.cos(θ);
+  const sin = Math.sin(θ);
+  const { w, h } = zone;
+
+  const dxs = [0, w * cos, w * cos - h * sin, -h * sin];
+  const dys = [0, w * sin, w * sin + h * cos,  h * cos];
+
+  const minDx = Math.min(...dxs);
+  const maxDx = Math.max(...dxs);
+  const minDy = Math.min(...dys);
+  const maxDy = Math.max(...dys);
+
+  return {
+    x: Math.round(Math.max(-minDx, Math.min(gx, stageW.value - maxDx))),
+    y: Math.round(Math.max(-minDy, Math.min(gy, STAGE_H - maxDy))),
+  };
+}
+
 function onZoneMousedown(zone: Zone) {
   if (mode.value !== "merchant") return;
   selectZone(zone.id);
@@ -137,15 +168,15 @@ function onZoneDragstart(zone: Zone) {
 
 function onZoneDragmove(e: { target: Konva.Group }, zone: Zone) {
   const node = e.target;
-  const newX = Math.max(0, Math.min(node.x(), stageW.value - zone.w));
-  const newY = Math.max(0, Math.min(node.y(), STAGE_H - zone.h));
-  node.x(newX);
-  node.y(newY);
+  const { x, y } = clampGroupPos(node.x(), node.y(), zone);
+  node.x(x);
+  node.y(y);
 }
 
 function onZoneDragend(e: { target: Konva.Group }, zone: Zone) {
-  zone.x = Math.round(e.target.x());
-  zone.y = Math.round(e.target.y());
+  const { x, y } = clampGroupPos(e.target.x(), e.target.y(), zone);
+  zone.x = x;
+  zone.y = y;
   isDragging.value = false;
 }
 
@@ -193,12 +224,16 @@ function onZoneTransformend(e: Konva.KonvaEventObject<Event>, zone: Zone) {
   const scaleY = node.scaleY();
   zone.w = Math.max(40, Math.round(zone.w * Math.abs(scaleX)));
   zone.h = Math.max(24, Math.round(zone.h * Math.abs(scaleY)));
-  zone.x = Math.round(node.x());
-  zone.y = Math.round(node.y());
   zone.rotation = Math.round(node.rotation() * 10) / 10;
   // Reset scale so the zone rect uses the updated pixel dimensions
   node.scaleX(1);
   node.scaleY(1);
+  // Clamp position with the new dimensions + rotation applied
+  const { x, y } = clampGroupPos(node.x(), node.y(), zone);
+  zone.x = x;
+  zone.y = y;
+  node.x(x);
+  node.y(y);
 }
 
 function onStageMouseup() {

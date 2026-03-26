@@ -31,6 +31,74 @@ export const ZONE_COLORS: ZoneColor[] = [
   { hex: "#ec4899", bg: "rgba(236,72,153,0.15)", lbl: "rgba(236,72,153,0.9)" },
 ];
 
+export const STAGE_W = 520;
+export const STAGE_H = 420;
+
+/**
+ * Axis-aligned bounding box of a (possibly rotated) zone.
+ * Returns the min/max x and y of the four rotated corners.
+ */
+export function computeZoneBounds(zone: Zone) {
+  const θ = (zone.rotation * Math.PI) / 180;
+  const c = Math.cos(θ), s = Math.sin(θ);
+  const { x, y, w, h } = zone;
+  const dxs = [0, w * c, w * c - h * s, -h * s];
+  const dys = [0, w * s, w * s + h * c,  h * c];
+  return {
+    minX: x + Math.min(...dxs),
+    maxX: x + Math.max(...dxs),
+    minY: y + Math.min(...dys),
+    maxY: y + Math.max(...dys),
+  };
+}
+
+/**
+ * Maximum width such that TR and BR corners stay within the stage,
+ * given the current x, y, h, and rotation.
+ */
+export function computeWMax(zone: Zone): number {
+  const θ = (zone.rotation * Math.PI) / 180;
+  const c = Math.cos(θ), s = Math.sin(θ);
+  const { x, y, h } = zone;
+  const upper: number[] = [];
+  // TR corner: (x + w·c, y + w·s)
+  if (c > 1e-9)  upper.push((STAGE_W - x) / c);
+  if (c < -1e-9) upper.push(-x / c);
+  if (s > 1e-9)  upper.push((STAGE_H - y) / s);
+  if (s < -1e-9) upper.push(-y / s);
+  // BR corner: (x + w·c − h·s, y + w·s + h·c)
+  if (c > 1e-9)  upper.push((STAGE_W - x + h * s) / c);
+  if (c < -1e-9) upper.push((h * s - x) / c);
+  if (s > 1e-9)  upper.push((STAGE_H - y - h * c) / s);
+  if (s < -1e-9) upper.push((-y - h * c) / s);
+  const valid = upper.filter((v) => isFinite(v) && v > 0);
+  return valid.length > 0 ? Math.max(40, Math.floor(Math.min(...valid))) : 40;
+}
+
+/**
+ * Maximum height such that BL and BR corners stay within the stage,
+ * given the current x, y, w, and rotation.
+ */
+export function computeHMax(zone: Zone): number {
+  const θ = (zone.rotation * Math.PI) / 180;
+  const c = Math.cos(θ), s = Math.sin(θ);
+  const { x, y, w } = zone;
+  const upper: number[] = [];
+  // BL corner: (x − h·s, y + h·c)
+  if (s < -1e-9) upper.push((STAGE_W - x) / (-s));
+  if (s > 1e-9)  upper.push(x / s);
+  if (c > 1e-9)  upper.push((STAGE_H - y) / c);
+  if (c < -1e-9) upper.push(-y / c);
+  // BR corner: (x + w·c − h·s, y + w·s + h·c)
+  const trx = x + w * c, try_ = y + w * s;
+  if (s < -1e-9) upper.push((STAGE_W - trx) / (-s));
+  if (s > 1e-9)  upper.push(trx / s);
+  if (c > 1e-9)  upper.push((STAGE_H - try_) / c);
+  if (c < -1e-9) upper.push(-try_ / c);
+  const valid = upper.filter((v) => isFinite(v) && v > 0);
+  return valid.length > 0 ? Math.max(24, Math.floor(Math.min(...valid))) : 24;
+}
+
 export const ALL_FEATURES = ["text", "image", "sticker", "icon"] as const;
 export const FEATURE_LABELS: Record<string, string> = {
   text: "Text",

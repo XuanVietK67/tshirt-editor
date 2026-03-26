@@ -4,6 +4,8 @@ import Konva from "konva";
 import {
   useEditorState,
   ZONE_COLORS,
+  STAGE_W as STAGE_W_CONST,
+  STAGE_H as STAGE_H_CONST,
   type Zone,
 } from "@/composables/useEditorState";
 
@@ -34,17 +36,17 @@ function removePhoto() { setProductImage(null); }
 
 // ── Stage dimensions (responsive) ────────────────────────────
 const stageContainerRef = ref<HTMLDivElement | null>(null);
-const stageW = ref(520);
-const STAGE_H = 420;
+const stageW = ref(STAGE_W_CONST);
+const STAGE_H = STAGE_H_CONST;
 
 let ro: ResizeObserver | null = null;
 onMounted(() => {
   if (stageContainerRef.value) {
     ro = new ResizeObserver((entries) => {
-      stageW.value = entries[0].contentRect.width || 520;
+      stageW.value = entries[0].contentRect.width || STAGE_W_CONST;
     });
     ro.observe(stageContainerRef.value);
-    stageW.value = stageContainerRef.value.clientWidth || 520;
+    stageW.value = stageContainerRef.value.clientWidth || STAGE_W_CONST;
   }
 });
 onUnmounted(() => ro?.disconnect());

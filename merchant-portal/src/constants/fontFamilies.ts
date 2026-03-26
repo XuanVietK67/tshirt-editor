@@ -90,6 +90,12 @@ export const FONT_FAMILIES: FontFamily[] = [
   { name: 'Inconsolata',      category: 'monospace' },
 ]
 
+/** Fonts already available without loading (OS system fonts) */
+export const SYSTEM_FONTS = new Set([
+  'Arial', 'Helvetica', 'Verdana', 'Tahoma', 'Trebuchet MS', 'Impact',
+  'Times New Roman', 'Georgia', 'Garamond', 'Courier New',
+])
+
 export const CATEGORY_LABELS: Record<FontFamily['category'], string> = {
   'sans-serif': 'Sans-serif',
   'serif':      'Serif',

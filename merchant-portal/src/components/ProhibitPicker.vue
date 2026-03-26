@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { FontFamily } from '@/constants/fontFamilies'
 import { CATEGORY_LABELS } from '@/constants/fontFamilies'
+import { loadGoogleFonts } from '@/utils/loadGoogleFonts'
 
 const props = defineProps<{
   /** Grouped font list (renders each item in its own typeface) */
@@ -70,6 +71,7 @@ function remove(name: string) {
 }
 
 function openDropdown() {
+  if (props.fonts) loadGoogleFonts()
   open.value = true
 }
 

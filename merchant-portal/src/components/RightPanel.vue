@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import FeatureCard from './FeatureCard.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import { useEditorState, ZONE_COLORS, ALL_FEATURES, FEATURE_LABELS } from '@/composables/useEditorState'
@@ -65,6 +65,29 @@ function toggleZoneFeature(feature: string) {
   if (idx === -1) selectedZone.value.features.push(feature)
   else selectedZone.value.features.splice(idx, 1)
 }
+
+// ── Vertices: four rotated corners of the selected zone ───────
+const vertices = computed(() => {
+  const z = selectedZone.value
+  if (!z) return null
+  const { x, y, w, h, rotation } = z
+  const θ = (rotation * Math.PI) / 180
+  const cos = Math.cos(θ)
+  const sin = Math.sin(θ)
+  // Rotate a local point (lx, ly) around zone origin (x, y)
+  function pt(lx: number, ly: number) {
+    return {
+      x: Math.round(x + lx * cos - ly * sin),
+      y: Math.round(y + lx * sin + ly * cos),
+    }
+  }
+  return {
+    tl: pt(0, 0),
+    tr: pt(w, 0),
+    br: pt(w, h),
+    bl: pt(0, h),
+  }
+})
 </script>
 
 <template>
@@ -320,15 +343,53 @@ function toggleZoneFeature(feature: string) {
             </div>
           </div>
 
-          <!-- Origin note — only shown when zone is rotated -->
-          <div v-if="selectedZone.rotation !== 0" class="zd-origin-note">
-            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <circle cx="6" cy="6" r="5" stroke="var(--text3)" stroke-width="1.1"/>
-              <line x1="6" y1="4" x2="6" y2="6.5" stroke="var(--text3)" stroke-width="1.2" stroke-linecap="round"/>
-              <circle cx="6" cy="8.5" r=".7" fill="var(--text3)"/>
-            </svg>
-            X / Y mark the top-left corner of the zone's unrotated bounding box. Rotation is applied around that origin.
+        </div>
+
+        <!-- Vertices panel -->
+        <div class="zd-panel" v-if="vertices">
+          <div class="zd-title">
+            Vertices
+            <span v-if="selectedZone.rotation !== 0" class="zd-vertices-rotated-badge">rotated</span>
           </div>
+
+          <div class="zd-vertices-grid">
+            <!-- TL -->
+            <div class="zd-vertex zd-vertex--tl">
+              <span class="zd-vertex-label">
+                <span class="zd-vertex-dot" :style="{ background: ZONE_COLORS[selectedZone.colorIdx].hex }"></span>
+                TL
+              </span>
+              <span class="zd-vertex-coord">{{ vertices.tl.x }}, {{ vertices.tl.y }}</span>
+            </div>
+            <!-- TR -->
+            <div class="zd-vertex zd-vertex--tr">
+              <span class="zd-vertex-label">
+                TR
+                <span class="zd-vertex-dot" :style="{ background: ZONE_COLORS[selectedZone.colorIdx].hex }"></span>
+              </span>
+              <span class="zd-vertex-coord">{{ vertices.tr.x }}, {{ vertices.tr.y }}</span>
+            </div>
+            <!-- BL -->
+            <div class="zd-vertex zd-vertex--bl">
+              <span class="zd-vertex-label">
+                <span class="zd-vertex-dot" :style="{ background: ZONE_COLORS[selectedZone.colorIdx].hex }"></span>
+                BL
+              </span>
+              <span class="zd-vertex-coord">{{ vertices.bl.x }}, {{ vertices.bl.y }}</span>
+            </div>
+            <!-- BR -->
+            <div class="zd-vertex zd-vertex--br">
+              <span class="zd-vertex-label">
+                BR
+                <span class="zd-vertex-dot" :style="{ background: ZONE_COLORS[selectedZone.colorIdx].hex }"></span>
+              </span>
+              <span class="zd-vertex-coord">{{ vertices.br.x }}, {{ vertices.br.y }}</span>
+            </div>
+          </div>
+
+          <p v-if="selectedZone.rotation !== 0" class="zd-vertices-note">
+            Coordinates are canvas pixels after rotation is applied. X / Y (above) mark the unrotated origin.
+          </p>
         </div>
 
         <div class="zd-panel">

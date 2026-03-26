@@ -240,6 +240,21 @@ body {
 .zd-origin-note { display: flex; align-items: flex-start; gap: 6px; font-size: 10.5px; color: var(--text3); background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 6px 8px; margin-top: 2px; line-height: 1.5; }
 .zd-origin-note svg { flex-shrink: 0; margin-top: 1px; }
 
+/* Vertices grid */
+.zd-vertices-rotated-badge { margin-left: 6px; font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--accent2); background: var(--accent-bg); border: 1px solid var(--accent-border); border-radius: 20px; padding: 1px 6px; vertical-align: middle; }
+.zd-vertices-grid { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; margin-bottom: 8px; }
+.zd-vertex { padding: 8px 10px; background: var(--surface2); display: flex; flex-direction: column; gap: 4px; }
+.zd-vertex--tl { border-right: 1px solid var(--border2); border-bottom: 1px solid var(--border2); }
+.zd-vertex--tr { border-bottom: 1px solid var(--border2); align-items: flex-end; }
+.zd-vertex--bl { border-right: 1px solid var(--border2); }
+.zd-vertex--br { align-items: flex-end; }
+.zd-vertex-label { display: flex; align-items: center; gap: 5px; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); }
+.zd-vertex-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.zd-vertex-coord { font-size: 11px; font-family: var(--mono); color: var(--text); white-space: nowrap; }
+.zd-vertex-coord::before { content: '('; color: var(--text3); }
+.zd-vertex-coord::after  { content: ')'; color: var(--text3); }
+.zd-vertices-note { font-size: 10.5px; color: var(--text3); line-height: 1.5; }
+
 /* Color swatches */
 .color-row { display: flex; gap: 5px; flex-wrap: wrap; }
 .cswatch { width: 20px; height: 20px; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: all 0.1s; }

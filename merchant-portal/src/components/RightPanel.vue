@@ -3,6 +3,7 @@ import { ref, computed, watch, nextTick } from 'vue'
 import FeatureCard from './FeatureCard.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import ProhibitPicker from './ProhibitPicker.vue'
+import StickerCategoryPicker from './StickerCategoryPicker.vue'
 import { FONT_FAMILIES, TEXT_STYLES } from '@/constants/fontFamilies'
 import { useEditorState, ZONE_COLORS, ALL_FEATURES, FEATURE_LABELS, STAGE_W, STAGE_H, computeZoneBounds, computeWMax, computeHMax } from '@/composables/useEditorState'
 
@@ -61,11 +62,11 @@ watch(selectedZoneId, async (newId) => {
 
 const prohibitedFonts = ref<string[]>([])
 const prohibitedStyles = ref<string[]>([])
+const allowedStickerCategories = ref<string[]>([])
 
 const activeChips = ref<Record<string, boolean>>({
-  // image / sticker / icon: true = allowed
+  // image / icon: true = allowed
   'image-Crop': true, 'image-Resize': true, 'image-Flip': true,
-  'sticker-Nature': true, 'sticker-Shapes': true, 'sticker-Animals': true, 'sticker-Symbols': true,
   'icon-Color': true, 'icon-Size': true, 'icon-Rotation': true,
 })
 
@@ -168,9 +169,9 @@ function saveConfig() {
       },
       sticker: {
         maxPerZone: featureSettings.value.stickerMax,
-        allowedCategories: ['Nature', 'Shapes', 'Animals', 'Food', 'Symbols', 'Seasonal'].filter(
-          (c) => activeChips.value['sticker-' + c],
-        ),
+        allowedCategories: allowedStickerCategories.value.length
+          ? allowedStickerCategories.value
+          : 'all',
       },
       icon: {
         library: featureSettings.value.iconLibrary,
@@ -358,12 +359,11 @@ const vertices = computed(() => {
             </select>
           </div>
           <div style="margin-top: 8px">
-            <div class="sub-label" style="margin-bottom: 5px">Allowed categories</div>
-            <div class="sub-chips">
-              <span v-for="chip in ['Nature','Shapes','Animals','Food','Symbols','Seasonal']" :key="chip"
-                class="chip" :class="{ on: activeChips['sticker-' + chip] }"
-                @click="toggleChip('sticker-' + chip)">{{ chip }}</span>
+            <div class="sub-label-row" style="margin-bottom: 5px">
+              <span class="sub-label">Allowed categories</span>
+              <span class="sub-hint">Empty = all allowed</span>
             </div>
+            <StickerCategoryPicker v-model="allowedStickerCategories" />
           </div>
           <div class="sub-option" style="margin-top: 6px">
             <span class="sub-label">Allow resize</span>

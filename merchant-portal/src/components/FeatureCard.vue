@@ -5,6 +5,7 @@ const props = defineProps<{
   name: string
   description: string
   enabled: boolean
+  color?: string
 }>()
 
 const emit = defineEmits<{
@@ -13,7 +14,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <div class="feature-card" :class="{ enabled: props.enabled }">
+  <div
+    class="feature-card"
+    :class="{ enabled: props.enabled }"
+    :style="props.color ? { '--card-color': props.color } : {}"
+  >
     <div class="feature-header">
       <div class="feature-icon">
         <slot name="icon" />

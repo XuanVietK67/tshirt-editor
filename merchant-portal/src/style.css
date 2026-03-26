@@ -231,10 +231,38 @@ body {
 /* Sub-options */
 .sub-option { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; }
 .sub-label { font-size: 11.5px; color: var(--text2); }
+.sub-label-row { display: flex; align-items: baseline; justify-content: space-between; }
+.sub-hint { font-size: 10px; color: var(--text3); }
 .sub-select { font-size: 11px; padding: 4px 8px; background: var(--surface3); color: var(--text); border: 1px solid var(--border2); border-radius: var(--radius-sm); font-family: var(--sans); cursor: pointer; }
 .sub-chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
-.chip { font-size: 10.5px; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface3); color: var(--text2); cursor: pointer; font-family: var(--mono); transition: all 0.12s; }
+.chip { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; padding: 3px 9px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface3); color: var(--text2); cursor: pointer; font-family: var(--mono); transition: all 0.12s; }
 .chip.on { background: color-mix(in srgb, var(--card-color) 10%, white); border-color: color-mix(in srgb, var(--card-color) 30%, transparent); color: color-mix(in srgb, var(--card-color) 90%, #000); }
+/* Prohibited chip group — active chips turn red */
+.chip-group--prohibited .chip.on { --card-color: var(--red); text-decoration: line-through; }
+
+/* ProhibitPicker */
+.pp-wrap { position: relative; }
+.pp-search-row { display: flex; align-items: center; gap: 6px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius-sm); padding: 5px 8px; cursor: text; transition: border-color 0.12s; }
+.pp-search-row:focus-within { border-color: var(--accent); }
+.pp-search-icon { color: var(--text3); flex-shrink: 0; }
+.pp-search-input { flex: 1; border: none; outline: none; font-size: 11.5px; font-family: var(--sans); color: var(--text); background: transparent; min-width: 0; }
+.pp-search-input::placeholder { color: var(--text3); }
+.pp-badge { flex-shrink: 0; font-size: 10px; font-family: var(--mono); background: var(--red-bg); color: var(--red); border: 1px solid color-mix(in srgb, var(--red) 25%, transparent); border-radius: 20px; padding: 1px 7px; }
+.pp-dropdown { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 100; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto; }
+.pp-group-label { font-size: 10px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: 0.07em; padding: 8px 10px 4px; position: sticky; top: 0; background: var(--surface); border-bottom: 1px solid var(--border); }
+.pp-item { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; cursor: pointer; transition: background 0.1s; }
+.pp-item:hover { background: var(--surface2); }
+.pp-item.prohibited { background: var(--red-bg); }
+.pp-item.prohibited:hover { background: color-mix(in srgb, var(--red) 12%, white); }
+.pp-item-name { font-size: 12.5px; color: var(--text); flex: 1; }
+.pp-item.prohibited .pp-item-name { color: var(--red); text-decoration: line-through; }
+.pp-item-check { color: var(--text3); flex-shrink: 0; }
+.pp-item-check--empty { color: var(--border2); }
+.pp-item.prohibited .pp-item-check { color: var(--red); }
+.pp-empty { padding: 14px 10px; font-size: 11.5px; color: var(--text3); text-align: center; }
+.pp-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.pp-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-family: var(--mono); padding: 2px 8px; border-radius: 20px; background: var(--red-bg); border: 1px solid color-mix(in srgb, var(--red) 25%, transparent); color: var(--red); cursor: pointer; transition: all 0.1s; }
+.pp-tag:hover { background: color-mix(in srgb, var(--red) 15%, white); }
 
 /* Zone list in sidebar */
 .zone-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }

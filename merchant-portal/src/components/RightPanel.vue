@@ -2,6 +2,8 @@
 import { ref, computed, watch, nextTick } from 'vue'
 import FeatureCard from './FeatureCard.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
+import ProhibitPicker from './ProhibitPicker.vue'
+import { FONT_FAMILIES, TEXT_STYLES } from '@/constants/fontFamilies'
 import { useEditorState, ZONE_COLORS, ALL_FEATURES, FEATURE_LABELS, STAGE_W, STAGE_H, computeZoneBounds, computeWMax, computeHMax } from '@/composables/useEditorState'
 
 const {
@@ -57,9 +59,11 @@ watch(selectedZoneId, async (newId) => {
   }
 })
 
+const prohibitedFonts = ref<string[]>([])
+const prohibitedStyles = ref<string[]>([])
+
 const activeChips = ref<Record<string, boolean>>({
-  'text-Serif': true, 'text-Sans-serif': true, 'text-Mono': true,
-  'text-Bold': true, 'text-Italic': true, 'text-Color': true,
+  // image / sticker / icon: true = allowed
   'image-Crop': true, 'image-Resize': true, 'image-Flip': true,
   'sticker-Nature': true, 'sticker-Shapes': true, 'sticker-Animals': true, 'sticker-Symbols': true,
   'icon-Color': true, 'icon-Size': true, 'icon-Rotation': true,
@@ -151,12 +155,8 @@ function saveConfig() {
       text: {
         maxChars: featureSettings.value.textMaxChars,
         maxLines: featureSettings.value.textMaxLines,
-        allowedFonts: ['Serif', 'Sans-serif', 'Script', 'Display', 'Mono'].filter(
-          (f) => activeChips.value['text-' + f],
-        ),
-        allowedStyles: ['Bold', 'Italic', 'Outline', 'Shadow', 'Color'].filter(
-          (s) => activeChips.value['text-' + s],
-        ),
+        prohibitedFonts: [...prohibitedFonts.value],
+        prohibitedStyles: [...prohibitedStyles.value],
       },
       image: {
         acceptedFormats: featureSettings.value.imageFormats,
@@ -268,20 +268,18 @@ const vertices = computed(() => {
             </select>
           </div>
           <div style="margin-top: 8px">
-            <div class="sub-label" style="margin-bottom: 5px">Allowed fonts</div>
-            <div class="sub-chips">
-              <span v-for="chip in ['Serif','Sans-serif','Script','Display','Mono']" :key="chip"
-                class="chip" :class="{ on: activeChips['text-' + chip] }"
-                @click="toggleChip('text-' + chip)">{{ chip }}</span>
+            <div class="sub-label-row" style="margin-bottom: 5px">
+              <span class="sub-label">Prohibited fonts</span>
+              <span class="sub-hint">Block specific font families</span>
             </div>
+            <ProhibitPicker :fonts="FONT_FAMILIES" v-model="prohibitedFonts" />
           </div>
-          <div style="margin-top: 8px">
-            <div class="sub-label" style="margin-bottom: 5px">Allowed styles</div>
-            <div class="sub-chips">
-              <span v-for="chip in ['Bold','Italic','Outline','Shadow','Color']" :key="chip"
-                class="chip" :class="{ on: activeChips['text-' + chip] }"
-                @click="toggleChip('text-' + chip)">{{ chip }}</span>
+          <div style="margin-top: 10px">
+            <div class="sub-label-row" style="margin-bottom: 5px">
+              <span class="sub-label">Prohibited styles</span>
+              <span class="sub-hint">Block specific text styles</span>
             </div>
+            <ProhibitPicker :items="TEXT_STYLES" v-model="prohibitedStyles" placeholder="Search styles…" />
           </div>
         </FeatureCard>
 

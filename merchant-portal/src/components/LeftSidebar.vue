@@ -71,16 +71,12 @@ function setPage(page: string) {
         >
           <div class="zone-swatch" :style="{ background: ZONE_COLORS[zone.colorIdx].hex }"></div>
           <span style="flex: 1; font-size: 12px">{{ zone.name }}</span>
-          <button
-            class="zone-del-btn"
-            @click.stop="deleteZone(zone.id)"
-          >×</button>
+          <button class="zone-del-btn" @click.stop="deleteZone(zone.id)">×</button>
         </div>
 
         <button class="add-zone-btn" @click="addDefaultZone">
-          <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
-            <line x1="5.5" y1="1" x2="5.5" y2="10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            <line x1="1" y1="5.5" x2="10" y2="5.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           Draw new zone
         </button>

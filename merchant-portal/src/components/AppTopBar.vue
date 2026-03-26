@@ -34,7 +34,7 @@ defineEmits<{
     <div class="topbar-actions">
       <div class="status-dot"></div>
       <span class="status-label status-label--desktop">Unsaved changes</span>
-      <button class="btn btn-ghost topbar-discard" @click="$emit('discard')">Discard</button>
+      <button class="btn btn-ghost" @click="$emit('discard')">Discard</button>
       <button class="btn btn-accent" @click="$emit('publish')">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
           <path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>

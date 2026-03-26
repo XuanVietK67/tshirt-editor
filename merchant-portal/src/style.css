@@ -274,6 +274,33 @@ body {
 .allowed-chip.on { background: rgba(34,197,94,0.1); border-color: rgba(34,197,94,0.3); color: var(--green); }
 .allowed-chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
+/* Native form select (replaces Polaris Select) */
+.form-select {
+  font-size: 11px;
+  padding: 4px 8px;
+  background: var(--surface3);
+  color: var(--text);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius-sm);
+  font-family: var(--sans);
+  cursor: pointer;
+  min-width: 100px;
+}
+.form-select:focus { outline: none; border-color: var(--accent); }
+
+/* Danger plain button (replaces Polaris Button variant=plain tone=critical) */
+.btn-danger-plain {
+  background: transparent;
+  border: none;
+  color: var(--red);
+  font-size: 12px;
+  font-family: var(--sans);
+  font-weight: 500;
+  cursor: pointer;
+  padding: 4px 0;
+}
+.btn-danger-plain:hover { text-decoration: underline; }
+
 /* Save footer */
 .save-footer { padding: 12px 14px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; flex-shrink: 0; }
 
@@ -436,3 +463,8 @@ body {
   .canvas-topbar { height: auto; min-height: 46px; flex-wrap: wrap; padding: 8px 12px; gap: 6px; }
   .canvas-topbar span { width: 100%; font-size: 10.5px; }
 }
+
+/* Zone name input fills the right side of .zd-row */
+.zd-row .zd-input { flex: 1; min-width: 0; }
+/* Max items select fills the right side of .zd-row */
+.zd-row .form-select { flex: 1; min-width: 0; }

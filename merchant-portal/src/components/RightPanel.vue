@@ -14,7 +14,17 @@ const {
 
 const rightScrollRef = ref<HTMLElement | null>(null)
 const zoneDetailRef = ref<HTMLElement | null>(null)
-const zoneNameInputRef = ref<HTMLInputElement | null>(null)
+
+const featureSettings = ref({
+  textMaxChars: '100',
+  textMaxLines: '1',
+  imageFormats: 'JPG, PNG, WEBP',
+  imageMaxSize: '5 MB',
+  imageMaxImages: '1',
+  stickerMax: '3',
+  iconLibrary: 'Built-in (240+)',
+  iconMax: '2',
+})
 
 function scrollToElement(container: HTMLElement, target: HTMLElement, duration = 750) {
   const start = container.scrollTop
@@ -29,7 +39,6 @@ function scrollToElement(container: HTMLElement, target: HTMLElement, duration =
   const startTime = performance.now()
   function step(now: number) {
     const t = Math.min((now - startTime) / duration, 1)
-    // ease-out quart: fast start, slow deceleration into target
     container.scrollTop = start + (end - start) * (1 - Math.pow(1 - t, 4))
     if (t < 1) requestAnimationFrame(step)
   }
@@ -42,11 +51,8 @@ watch(selectedZoneId, async (newId) => {
   if (rightScrollRef.value && zoneDetailRef.value) {
     scrollToElement(rightScrollRef.value, zoneDetailRef.value)
   }
-  zoneNameInputRef.value?.focus()
-  zoneNameInputRef.value?.select()
 })
 
-// Chip active state for sub-options (keyed by feature + chip label)
 const activeChips = ref<Record<string, boolean>>({
   'text-Serif': true, 'text-Sans-serif': true, 'text-Mono': true,
   'text-Bold': true, 'text-Italic': true, 'text-Color': true,
@@ -66,14 +72,12 @@ function toggleZoneFeature(feature: string) {
   else selectedZone.value.features.splice(idx, 1)
 }
 
-// ── Transform limits (position-aware) ────────────────────────
 const limits = computed(() => {
   const z = selectedZone.value
   if (!z) return { xMin: 0, xMax: STAGE_W - 1, yMin: 0, yMax: STAGE_H - 1, wMax: 480, hMax: 396 }
   const θ = (z.rotation * Math.PI) / 180
   const c = Math.cos(θ), s = Math.sin(θ)
   const { w, h } = z
-  // AABB offsets for current w/h/rotation
   const dxs = [0, w * c, w * c - h * s, -h * s]
   const dys = [0, w * s, w * s + h * c,  h * c]
   const minDx = Math.min(...dxs), maxDx = Math.max(...dxs)
@@ -103,7 +107,6 @@ function applyField(field: string, raw: string, el: HTMLInputElement) {
     clamped = Math.round(((n % 360) + 360) % 360)
     z.rotation = clamped
     if (clamped !== Math.round(n)) el.value = String(clamped)
-    // Re-clamp position with new rotation
     const bounds = computeZoneBounds(z)
     let nx = z.x, ny = z.y
     if (bounds.minX < 0)      nx -= bounds.minX
@@ -120,30 +123,14 @@ function applyField(field: string, raw: string, el: HTMLInputElement) {
   else if (field === 'w') z.w = clamped
   else if (field === 'h') z.h = clamped
 
-  // Correct the input element immediately if the value was clamped
   if (clamped !== Math.round(n)) el.value = String(clamped)
 }
 
-/**
- * Restricts keyboard input on transform number fields.
- *
- * Allowed keys and their effect:
- *   ArrowUp   — increment value by 1 (native <input type="number"> behaviour)
- *               → triggers @input → applyField clamps to valid range
- *   ArrowDown — decrement value by 1 (same as above)
- *   Tab       — move focus to the next field
- *   Escape    — blur / cancel (browser default)
- *
- * All other keys (digits, letters, minus, backspace, ctrl+v, etc.) are
- * blocked so the user cannot type an arbitrary value directly.
- * Paste is also blocked via @paste.prevent on each input.
- */
 function preventTyping(e: KeyboardEvent) {
   const allowed = new Set(['ArrowUp', 'ArrowDown', 'Tab', 'Escape'])
   if (!allowed.has(e.key)) e.preventDefault()
 }
 
-// ── Vertices: four rotated corners of the selected zone ───────
 const vertices = computed(() => {
   const z = selectedZone.value
   if (!z) return null
@@ -151,7 +138,6 @@ const vertices = computed(() => {
   const θ = (rotation * Math.PI) / 180
   const cos = Math.cos(θ)
   const sin = Math.sin(θ)
-  // Rotate a local point (lx, ly) around zone origin (x, y)
   function pt(lx: number, ly: number) {
     return {
       x: Math.round(x + lx * cos - ly * sin),
@@ -185,11 +171,20 @@ const vertices = computed(() => {
           <template #icon>T</template>
           <div class="sub-option">
             <span class="sub-label">Max characters</span>
-            <select class="sub-select"><option>50</option><option selected>100</option><option>200</option><option>Unlimited</option></select>
+            <select class="form-select" v-model="featureSettings.textMaxChars">
+              <option value="50">50</option>
+              <option value="100">100</option>
+              <option value="200">200</option>
+              <option value="Unlimited">Unlimited</option>
+            </select>
           </div>
           <div class="sub-option">
             <span class="sub-label">Max lines</span>
-            <select class="sub-select"><option selected>1</option><option>2</option><option>3</option></select>
+            <select class="form-select" v-model="featureSettings.textMaxLines">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
           </div>
           <div style="margin-top: 8px">
             <div class="sub-label" style="margin-bottom: 5px">Allowed fonts</div>
@@ -225,15 +220,27 @@ const vertices = computed(() => {
           </template>
           <div class="sub-option">
             <span class="sub-label">Accepted formats</span>
-            <select class="sub-select"><option selected>JPG, PNG, WEBP</option><option>JPG, PNG</option><option>All image types</option></select>
+            <select class="form-select" v-model="featureSettings.imageFormats">
+              <option value="JPG, PNG, WEBP">JPG, PNG, WEBP</option>
+              <option value="JPG, PNG">JPG, PNG</option>
+              <option value="All image types">All image types</option>
+            </select>
           </div>
           <div class="sub-option">
             <span class="sub-label">Max file size</span>
-            <select class="sub-select"><option>2 MB</option><option selected>5 MB</option><option>10 MB</option></select>
+            <select class="form-select" v-model="featureSettings.imageMaxSize">
+              <option value="2 MB">2 MB</option>
+              <option value="5 MB">5 MB</option>
+              <option value="10 MB">10 MB</option>
+            </select>
           </div>
           <div class="sub-option">
             <span class="sub-label">Max images</span>
-            <select class="sub-select"><option selected>1</option><option>2</option><option>3</option></select>
+            <select class="form-select" v-model="featureSettings.imageMaxImages">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+            </select>
           </div>
           <div style="margin-top: 8px">
             <div class="sub-label" style="margin-bottom: 5px">Edit tools</div>
@@ -262,7 +269,12 @@ const vertices = computed(() => {
           </template>
           <div class="sub-option">
             <span class="sub-label">Max stickers per zone</span>
-            <select class="sub-select"><option>1</option><option selected>3</option><option>5</option><option>10</option></select>
+            <select class="form-select" v-model="featureSettings.stickerMax">
+              <option value="1">1</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+              <option value="10">10</option>
+            </select>
           </div>
           <div style="margin-top: 8px">
             <div class="sub-label" style="margin-bottom: 5px">Allowed categories</div>
@@ -296,11 +308,19 @@ const vertices = computed(() => {
           </template>
           <div class="sub-option">
             <span class="sub-label">Icon library</span>
-            <select class="sub-select"><option selected>Built-in (240+)</option><option>Custom upload</option><option>Both</option></select>
+            <select class="form-select" v-model="featureSettings.iconLibrary">
+              <option value="Built-in (240+)">Built-in (240+)</option>
+              <option value="Custom upload">Custom upload</option>
+              <option value="Both">Both</option>
+            </select>
           </div>
           <div class="sub-option">
             <span class="sub-label">Max icons per zone</span>
-            <select class="sub-select"><option selected>2</option><option>3</option><option>5</option></select>
+            <select class="form-select" v-model="featureSettings.iconMax">
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+            </select>
           </div>
           <div style="margin-top: 8px">
             <div class="sub-label" style="margin-bottom: 5px">Allow buyer to change</div>
@@ -319,7 +339,13 @@ const vertices = computed(() => {
           <div class="zd-title">Selected zone</div>
           <div class="zd-row">
             <span class="zd-key">Name</span>
-            <input class="zd-input" ref="zoneNameInputRef" v-model="selectedZone.name" placeholder="Zone name">
+            <input
+              class="zd-input"
+              type="text"
+              v-model="selectedZone.name"
+              placeholder="Zone name"
+              autocomplete="off"
+            />
           </div>
           <div class="zd-row">
             <span class="zd-key">Color</span>
@@ -337,7 +363,7 @@ const vertices = computed(() => {
         </div>
 
         <!-- Transform: position, size, rotation -->
-        <div class="zd-panel" ref="zoneDetailRef">
+        <div class="zd-panel">
           <div class="zd-title">Transform</div>
 
           <div class="zd-kb-hint">
@@ -450,7 +476,6 @@ const vertices = computed(() => {
               <span class="zd-range-hint">0–359</span>
             </div>
           </div>
-
         </div>
 
         <!-- Vertices panel -->
@@ -461,7 +486,6 @@ const vertices = computed(() => {
           </div>
 
           <div class="zd-vertices-grid">
-            <!-- TL -->
             <div class="zd-vertex zd-vertex--tl">
               <span class="zd-vertex-label">
                 <span class="zd-vertex-dot" :style="{ background: ZONE_COLORS[selectedZone.colorIdx].hex }"></span>
@@ -469,7 +493,6 @@ const vertices = computed(() => {
               </span>
               <span class="zd-vertex-coord">{{ vertices.tl.x }}, {{ vertices.tl.y }}</span>
             </div>
-            <!-- TR -->
             <div class="zd-vertex zd-vertex--tr">
               <span class="zd-vertex-label">
                 TR
@@ -477,7 +500,6 @@ const vertices = computed(() => {
               </span>
               <span class="zd-vertex-coord">{{ vertices.tr.x }}, {{ vertices.tr.y }}</span>
             </div>
-            <!-- BL -->
             <div class="zd-vertex zd-vertex--bl">
               <span class="zd-vertex-label">
                 <span class="zd-vertex-dot" :style="{ background: ZONE_COLORS[selectedZone.colorIdx].hex }"></span>
@@ -485,7 +507,6 @@ const vertices = computed(() => {
               </span>
               <span class="zd-vertex-coord">{{ vertices.bl.x }}, {{ vertices.bl.y }}</span>
             </div>
-            <!-- BR -->
             <div class="zd-vertex zd-vertex--br">
               <span class="zd-vertex-label">
                 BR
@@ -524,8 +545,11 @@ const vertices = computed(() => {
           </div>
           <div class="zd-row">
             <span class="zd-key">Max items</span>
-            <select class="sub-select" v-model="selectedZone.maxItems">
-              <option>1</option><option>3</option><option>5</option><option>Unlimited</option>
+            <select class="form-select" v-model="selectedZone.maxItems">
+              <option value="1">1</option>
+              <option value="3">3</option>
+              <option value="5">5</option>
+              <option value="Unlimited">Unlimited</option>
             </select>
           </div>
           <div class="zd-row">
@@ -533,11 +557,7 @@ const vertices = computed(() => {
             <ToggleSwitch v-model="selectedZone.showBorder" />
           </div>
           <div style="margin-top: 8px; text-align: right">
-            <button
-              class="btn btn-ghost"
-              style="font-size: 11px; padding: 5px 10px; color: var(--red); border-color: rgba(239,68,68,0.3)"
-              @click="deleteZone(selectedZone.id)"
-            >Delete zone</button>
+            <button class="btn-danger-plain" @click="deleteZone(selectedZone.id)">Delete zone</button>
           </div>
         </div>
       </template>

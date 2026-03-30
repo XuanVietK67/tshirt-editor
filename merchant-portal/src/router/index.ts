@@ -8,9 +8,15 @@ const routes = [
     children: [
       {
         path: '',
-        name: 'home',
-        component: () => import('@pages/Home.vue'),
-        meta: { title: 'Home' }
+        name: 'dashboard',
+        component: () => import('@pages/Dashboard.vue'),
+        meta: { title: 'Dashboard' }
+      },
+      {
+        path: 'config-design',
+        name: 'config-design',
+        component: () => import('@pages/ConfigDesign.vue'),
+        meta: { title: 'Config Design' }
       },
       {
         path: 'products',

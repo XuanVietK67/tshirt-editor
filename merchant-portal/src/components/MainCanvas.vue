@@ -6,7 +6,9 @@ import {
   ZONE_COLORS,
   STAGE_W as STAGE_W_CONST,
   STAGE_H as STAGE_H_CONST,
+  buildShapePath,
   type Zone,
+  type ZoneShape,
 } from "@/composables/useEditorState";
 
 const {
@@ -15,6 +17,7 @@ const {
   tool,
   mode,
   productImage,
+  activeShape,
   addZone,
   selectZone,
   deselectZone,
@@ -86,23 +89,48 @@ function zoneGroupConfig(zone: Zone) {
   };
 }
 
-function zoneRectConfig(zone: Zone) {
+// Shared stroke/fill/shadow style for all zone shapes
+function zoneBaseStyle(zone: Zone) {
   const color = ZONE_COLORS[zone.colorIdx];
   const isSelected = zone.id === selectedZoneId.value;
   return {
-    x: 0,
-    y: 0,
-    width: zone.w,
-    height: zone.h,
     fill: color.bg,
     stroke: isSelected ? "#2c6ecb" : color.hex,
     strokeWidth: isSelected ? 2.5 : 2,
-    cornerRadius: 5,
     shadowColor: isSelected ? "rgba(0,0,0,0.15)" : "transparent",
     shadowBlur: isSelected ? 8 : 0,
     shadowOffsetY: isSelected ? 2 : 0,
     listening: true,
   };
+}
+
+// Invisible rect that pins the group bounding box to (0,0)–(w,h)
+// so the Transformer handles always appear at the zone boundary,
+// regardless of which shape is rendered inside.
+function zoneBoundsConfig(zone: Zone) {
+  return {
+    x: 0, y: 0,
+    width: zone.w, height: zone.h,
+    fill: "transparent", stroke: "transparent", strokeWidth: 0,
+    listening: false,
+  };
+}
+
+function zoneRectConfig(zone: Zone) {
+  return { ...zoneBaseStyle(zone), x: 0, y: 0, width: zone.w, height: zone.h, cornerRadius: 5 };
+}
+
+function zoneRoundedRectConfig(zone: Zone) {
+  const r = Math.round(Math.min(zone.w, zone.h) * 0.22);
+  return { ...zoneBaseStyle(zone), x: 0, y: 0, width: zone.w, height: zone.h, cornerRadius: r };
+}
+
+function zoneEllipseConfig(zone: Zone) {
+  return { ...zoneBaseStyle(zone), x: zone.w / 2, y: zone.h / 2, radiusX: zone.w / 2, radiusY: zone.h / 2 };
+}
+
+function zonePathConfig(zone: Zone) {
+  return { ...zoneBaseStyle(zone), x: 0, y: 0, data: buildShapePath(zone.shape as ZoneShape, zone.w, zone.h) };
 }
 
 function zoneLabelTagConfig(zone: Zone) {
@@ -248,17 +276,38 @@ const drawPreview = ref({ x: 0, y: 0, w: 0, h: 0, visible: false });
 let drawStartX = 0;
 let drawStartY = 0;
 
-const drawPreviewConfig = computed(() => ({
-  x: drawPreview.value.x,
-  y: drawPreview.value.y,
-  width: drawPreview.value.w,
-  height: drawPreview.value.h,
+const drawPreviewStyle = {
   stroke: "#2c6ecb",
   strokeWidth: 2,
   dash: [6, 3],
   fill: "rgba(108,99,255,0.08)",
-  cornerRadius: 5,
   listening: false,
+};
+
+const drawPreviewRectConfig = computed(() => ({
+  ...drawPreviewStyle,
+  x: drawPreview.value.x,
+  y: drawPreview.value.y,
+  width: drawPreview.value.w,
+  height: drawPreview.value.h,
+  cornerRadius: activeShape.value === "rounded-rect"
+    ? Math.round(Math.min(drawPreview.value.w, drawPreview.value.h) * 0.22)
+    : 5,
+}));
+
+const drawPreviewEllipseConfig = computed(() => ({
+  ...drawPreviewStyle,
+  x: drawPreview.value.x + drawPreview.value.w / 2,
+  y: drawPreview.value.y + drawPreview.value.h / 2,
+  radiusX: drawPreview.value.w / 2,
+  radiusY: drawPreview.value.h / 2,
+}));
+
+const drawPreviewPathConfig = computed(() => ({
+  ...drawPreviewStyle,
+  x: drawPreview.value.x,
+  y: drawPreview.value.y,
+  data: buildShapePath(activeShape.value, drawPreview.value.w, drawPreview.value.h),
 }));
 
 function onStageMousedown(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
@@ -417,8 +466,18 @@ const canvasHint = computed(() => {
 
               <!-- Zones layer -->
               <v-layer>
-                <!-- Draw preview -->
-                <v-rect v-if="drawPreview.visible" :config="drawPreviewConfig" />
+                <!-- Draw preview — matches the currently selected shape -->
+                <template v-if="drawPreview.visible">
+                  <v-rect
+                    v-if="activeShape === 'rect' || activeShape === 'rounded-rect'"
+                    :config="drawPreviewRectConfig"
+                  />
+                  <v-ellipse
+                    v-else-if="activeShape === 'ellipse'"
+                    :config="drawPreviewEllipseConfig"
+                  />
+                  <v-path v-else :config="drawPreviewPathConfig" />
+                </template>
 
                 <!-- Zone groups -->
                 <v-group
@@ -432,8 +491,23 @@ const canvasHint = computed(() => {
                   @dragend="onZoneDragend($event, zone)"
                   @transformend="onZoneTransformend($event, zone)"
                 >
-                  <!-- Zone background -->
-                  <v-rect :config="zoneRectConfig(zone)" />
+                  <!-- Invisible sentinel rect — pins Transformer handles to the zone bounding box -->
+                  <v-rect :config="zoneBoundsConfig(zone)" />
+
+                  <!-- Zone visual shape -->
+                  <v-rect
+                    v-if="!zone.shape || zone.shape === 'rect'"
+                    :config="zoneRectConfig(zone)"
+                  />
+                  <v-rect
+                    v-else-if="zone.shape === 'rounded-rect'"
+                    :config="zoneRoundedRectConfig(zone)"
+                  />
+                  <v-ellipse
+                    v-else-if="zone.shape === 'ellipse'"
+                    :config="zoneEllipseConfig(zone)"
+                  />
+                  <v-path v-else :config="zonePathConfig(zone)" />
 
                   <!-- Label above zone -->
                   <v-label :config="{ x: 0, y: -22 }">

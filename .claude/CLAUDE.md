@@ -115,14 +115,6 @@ export const loader = async ({ request }) => {
 2. Add it to the `SCOPES` env var in `tshirt-v3/.env`.
 3. Run `npm run dev` — Shopify CLI will prompt to update the app configuration.
 
-### Database Schema Changes (Prisma)
-
-```bash
-# After editing tshirt-v3/prisma/schema.prisma:
-cd tshirt-v3
-npx prisma migrate dev --name describe-your-change   # creates migration + regenerates client
-```
-
 ### Before Committing
 
 ```bash

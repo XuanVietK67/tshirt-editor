@@ -6,6 +6,105 @@ export interface ZoneColor {
   lbl: string;
 }
 
+export type ZoneShape =
+  | "rect"
+  | "rounded-rect"
+  | "ellipse"
+  | "triangle"
+  | "diamond"
+  | "star"
+  | "pentagon"
+  | "hexagon"
+  | "heart"
+  | "arrow";
+
+export interface ZoneShapeMeta {
+  id: ZoneShape;
+  label: string;
+}
+
+export const ZONE_SHAPES: ZoneShapeMeta[] = [
+  { id: "rect",         label: "Rectangle"   },
+  { id: "rounded-rect", label: "Rounded Rect" },
+  { id: "ellipse",      label: "Ellipse"     },
+  { id: "triangle",     label: "Triangle"    },
+  { id: "diamond",      label: "Diamond"     },
+  { id: "star",         label: "Star"        },
+  { id: "pentagon",     label: "Pentagon"    },
+  { id: "hexagon",      label: "Hexagon"     },
+  { id: "heart",        label: "Heart"       },
+  { id: "arrow",        label: "Arrow"       },
+];
+
+/**
+ * Build an SVG path string for path-based zone shapes.
+ * Called for: triangle, diamond, star, pentagon, hexagon, heart, arrow.
+ * rect / rounded-rect / ellipse use native Konva shapes instead.
+ */
+export function buildShapePath(shape: ZoneShape, w: number, h: number): string {
+  const cx = w / 2;
+  const cy = h / 2;
+  const f = (n: number) => n.toFixed(2);
+
+  switch (shape) {
+    case "triangle":
+      return `M ${f(cx)} 0 L ${f(w)} ${f(h)} L 0 ${f(h)} Z`;
+
+    case "diamond":
+      return `M ${f(cx)} 0 L ${f(w)} ${f(cy)} L ${f(cx)} ${f(h)} L 0 ${f(cy)} Z`;
+
+    case "star": {
+      const oRx = cx, oRy = cy, iRx = cx * 0.42, iRy = cy * 0.42;
+      let d = "";
+      for (let i = 0; i < 10; i++) {
+        const a = (i * Math.PI) / 5 - Math.PI / 2;
+        const rx = i % 2 === 0 ? oRx : iRx;
+        const ry = i % 2 === 0 ? oRy : iRy;
+        d += (i === 0 ? "M" : "L") + ` ${f(cx + rx * Math.cos(a))} ${f(cy + ry * Math.sin(a))} `;
+      }
+      return d + "Z";
+    }
+
+    case "pentagon": {
+      let d = "";
+      for (let i = 0; i < 5; i++) {
+        const a = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        d += (i === 0 ? "M" : "L") + ` ${f(cx + cx * Math.cos(a))} ${f(cy + cy * Math.sin(a))} `;
+      }
+      return d + "Z";
+    }
+
+    case "hexagon": {
+      let d = "";
+      for (let i = 0; i < 6; i++) {
+        const a = (i * 2 * Math.PI) / 6 - Math.PI / 2;
+        d += (i === 0 ? "M" : "L") + ` ${f(cx + cx * Math.cos(a))} ${f(cy + cy * Math.sin(a))} `;
+      }
+      return d + "Z";
+    }
+
+    case "heart": {
+      const s = (px: number, py: number) =>
+        `${f((px / 100) * w)} ${f((py / 100) * h)}`;
+      return [
+        `M ${s(50, 85)}`,
+        `C ${s(50, 85)} ${s(0, 58)} ${s(0, 30)}`,
+        `C ${s(0, 10)} ${s(50, 15)} ${s(50, 40)}`,
+        `C ${s(50, 15)} ${s(100, 10)} ${s(100, 30)}`,
+        `C ${s(100, 58)} ${s(50, 85)} ${s(50, 85)} Z`,
+      ].join(" ");
+    }
+
+    case "arrow": {
+      const y1 = f(h * 0.32), y2 = f(h * 0.68), sx = f(w * 0.62);
+      return `M 0 ${y1} L ${sx} ${y1} L ${sx} 0 L ${f(w)} ${f(cy)} L ${sx} ${f(h)} L ${sx} ${y2} L 0 ${y2} Z`;
+    }
+
+    default:
+      return "";
+  }
+}
+
 export interface Zone {
   id: string;
   name: string;
@@ -16,6 +115,7 @@ export interface Zone {
   w: number;
   h: number;
   rotation: number;
+  shape: ZoneShape;
   features: string[];
   required: boolean;
   maxItems: string;
@@ -118,6 +218,7 @@ const enabledFeatures = ref<Set<string>>(
 const tool = ref<"draw" | "select">("draw");
 const mode = ref<"merchant" | "buyer">("merchant");
 const productImage = ref<string | null>(null);
+const activeShape = ref<ZoneShape>("rect");
 
 export function useEditorState() {
   function uid() {
@@ -147,6 +248,7 @@ export function useEditorState() {
       w,
       h,
       rotation: 0,
+      shape: activeShape.value,
       features: [...enabledFeatures.value],
       required: false,
       maxItems: "3",
@@ -154,6 +256,26 @@ export function useEditorState() {
     };
     zones.value.push(z);
     selectedZoneId.value = z.id;
+  }
+
+  function setActiveShape(s: ZoneShape) {
+    activeShape.value = s;
+  }
+
+  /** Replace all zones (used when loading a saved config). Updates the ID counter. */
+  function setZones(zonesData: Zone[]) {
+    zones.value = [...zonesData];
+    selectedZoneId.value = null;
+    const maxId = zonesData.reduce((max, z) => {
+      const n = parseInt(z.id.slice(1), 10);
+      return isNaN(n) ? max : Math.max(max, n);
+    }, 2);
+    zoneIdCtr = maxId + 1;
+  }
+
+  /** Replace the enabled-features set (used when loading a saved config). */
+  function setEnabledFeatures(features: string[]) {
+    enabledFeatures.value = new Set(features);
   }
 
   function addDefaultZone() {
@@ -202,6 +324,7 @@ export function useEditorState() {
     tool,
     mode,
     productImage,
+    activeShape,
     addZone,
     addDefaultZone,
     deleteZone,
@@ -211,5 +334,8 @@ export function useEditorState() {
     setTool,
     setMode,
     setProductImage,
+    setActiveShape,
+    setZones,
+    setEnabledFeatures,
   };
 }

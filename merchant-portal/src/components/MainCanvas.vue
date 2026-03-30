@@ -40,7 +40,6 @@ function removePhoto() { setProductImage(null); }
 // ── Stage dimensions (responsive) ────────────────────────────
 const stageContainerRef = ref<HTMLDivElement | null>(null);
 const stageW = ref(STAGE_W_CONST);
-const STAGE_H = STAGE_H_CONST;
 
 let ro: ResizeObserver | null = null;
 onMounted(() => {
@@ -54,7 +53,16 @@ onMounted(() => {
 });
 onUnmounted(() => ro?.disconnect());
 
-const stageConfig = computed(() => ({ width: stageW.value, height: STAGE_H }));
+// Uniform scale factor: keeps the logical 520×420 coordinate space intact
+// while the stage renders at whatever CSS width the container reports.
+const scale = computed(() => stageW.value / STAGE_W_CONST);
+
+const stageConfig = computed(() => ({
+  width: stageW.value,
+  height: Math.round(STAGE_H_CONST * scale.value),
+  scaleX: scale.value,
+  scaleY: scale.value,
+}));
 
 // ── Product image ─────────────────────────────────────────────
 const konvaImage = ref<HTMLImageElement | null>(null);
@@ -62,8 +70,8 @@ const bgImageConfig = computed(() => ({
   image: konvaImage.value,
   x: 0,
   y: 0,
-  width: stageW.value,
-  height: STAGE_H,
+  width: STAGE_W_CONST,
+  height: STAGE_H_CONST,
   listening: false,
 }));
 
@@ -181,8 +189,8 @@ function clampGroupPos(gx: number, gy: number, zone: Zone) {
   const maxDy = Math.max(...dys);
 
   return {
-    x: Math.round(Math.max(-minDx, Math.min(gx, stageW.value - maxDx))),
-    y: Math.round(Math.max(-minDy, Math.min(gy, STAGE_H - maxDy))),
+    x: Math.round(Math.max(-minDx, Math.min(gx, STAGE_W_CONST - maxDx))),
+    y: Math.round(Math.max(-minDy, Math.min(gy, STAGE_H_CONST - maxDy))),
   };
 }
 
@@ -318,25 +326,29 @@ function onStageMousedown(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
     deselectZone();
     return;
   }
-  const pos = e.target.getStage()!.getPointerPosition()!;
-  drawStartX = pos.x;
-  drawStartY = pos.y;
+  const rawPos = e.target.getStage()!.getPointerPosition()!;
+  const s = scale.value;
+  drawStartX = rawPos.x / s;
+  drawStartY = rawPos.y / s;
   isDrawing.value = true;
-  drawPreview.value = { x: pos.x, y: pos.y, w: 0, h: 0, visible: true };
+  drawPreview.value = { x: drawStartX, y: drawStartY, w: 0, h: 0, visible: true };
 }
 
 function onStageMousemove(e: Konva.KonvaEventObject<MouseEvent | TouchEvent>) {
   if (!isDrawing.value) return;
   const stage = e.target.getStage();
   if (!stage) return;
-  const pos = stage.getPointerPosition();
-  if (!pos) return;
+  const rawPos = stage.getPointerPosition();
+  if (!rawPos) return;
+  const s = scale.value;
+  const lx = rawPos.x / s;
+  const ly = rawPos.y / s;
   drawPreview.value = {
     visible: true,
-    x: Math.min(drawStartX, pos.x),
-    y: Math.min(drawStartY, pos.y),
-    w: Math.abs(pos.x - drawStartX),
-    h: Math.abs(pos.y - drawStartY),
+    x: Math.min(drawStartX, lx),
+    y: Math.min(drawStartY, ly),
+    w: Math.abs(lx - drawStartX),
+    h: Math.abs(ly - drawStartY),
   };
 }
 

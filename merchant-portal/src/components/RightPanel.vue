@@ -7,6 +7,8 @@ import StickerCategoryPicker from './StickerCategoryPicker.vue'
 import { FONT_FAMILIES, TEXT_STYLES } from '@/constants/fontFamilies'
 import { useEditorState, ZONE_COLORS, ZONE_SHAPES, ALL_FEATURES, FEATURE_LABELS, STAGE_W, STAGE_H, computeZoneBounds, computeWMax, computeHMax, type Zone } from '@/composables/useEditorState'
 
+const emit = defineEmits<{ 'navigate-to-canvas': [] }>()
+
 const {
   zones,
   selectedZone,
@@ -202,6 +204,7 @@ function saveConfig() {
   console.log('Design config:', config)
   saveStatus.value = 'saved'
   setTimeout(() => { saveStatus.value = 'idle' }, 2500)
+  emit('navigate-to-canvas')
 }
 
 function loadConfig() {
@@ -212,6 +215,7 @@ function loadConfig() {
   } catch {
     // corrupt stored data — ignore
   }
+  emit('navigate-to-canvas')
 }
 
 function resetConfig() {
@@ -224,6 +228,7 @@ function resetConfig() {
   allowedStickerCategories.value = []
   localStorage.removeItem(CONFIG_KEY)
   saveStatus.value = 'idle'
+  emit('navigate-to-canvas')
 }
 
 onMounted(loadConfig)

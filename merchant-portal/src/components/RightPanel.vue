@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import FeatureCard from './FeatureCard.vue'
 import ToggleSwitch from './ToggleSwitch.vue'
 import ProhibitPicker from './ProhibitPicker.vue'
 import StickerCategoryPicker from './StickerCategoryPicker.vue'
 import { FONT_FAMILIES, TEXT_STYLES } from '@/constants/fontFamilies'
-import { useEditorState, ZONE_COLORS, ALL_FEATURES, FEATURE_LABELS, STAGE_W, STAGE_H, computeZoneBounds, computeWMax, computeHMax } from '@/composables/useEditorState'
+import { useEditorState, ZONE_COLORS, ZONE_SHAPES, ALL_FEATURES, FEATURE_LABELS, STAGE_W, STAGE_H, computeZoneBounds, computeWMax, computeHMax, type Zone } from '@/composables/useEditorState'
 
 const {
   zones,
@@ -14,9 +14,8 @@ const {
   enabledFeatures,
   toggleFeature,
   deleteZone,
-  productImage,
-  tool,
-  mode,
+  setZones,
+  setEnabledFeatures,
 } = useEditorState()
 
 const rightScrollRef = ref<HTMLElement | null>(null)
@@ -140,77 +139,94 @@ function preventTyping(e: KeyboardEvent) {
   if (!allowed.has(e.key)) e.preventDefault()
 }
 
-function saveConfig() {
-  const config = {
-    canvas: {
-      width: STAGE_W,
-      height: STAGE_H,
-      hasProductImage: !!productImage.value,
-      productImage: productImage.value,
-      zoneCount: zones.value.length,
-      activeTool: tool.value,
-      mode: mode.value,
-    },
+// ── Persistence ───────────────────────────────────────────────
+const CONFIG_KEY = 'pz-design-config'
+
+const FEATURE_SETTINGS_DEFAULTS = {
+  textMaxChars: '100', textMaxLines: '1',
+  imageFormats: 'JPG, PNG, WEBP', imageMaxSize: '5 MB', imageMaxImages: '1',
+  stickerMax: '3', iconLibrary: 'Built-in (240+)', iconMax: '2',
+}
+
+const ACTIVE_CHIPS_DEFAULTS: Record<string, boolean> = {
+  'image-Crop': true, 'image-Resize': true, 'image-Flip': true,
+  'icon-Color': true, 'icon-Size': true, 'icon-Rotation': true,
+}
+
+type SavedConfig = {
+  version: 1
+  enabledFeatures: string[]
+  featureSettings: typeof FEATURE_SETTINGS_DEFAULTS
+  activeChips: Record<string, boolean>
+  prohibitedFonts: string[]
+  prohibitedStyles: string[]
+  allowedStickerCategories: string[]
+  zones: (Omit<Zone, 'features'> & { features: string[] })[]
+}
+
+const saveStatus = ref<'idle' | 'saved'>('idle')
+
+function buildConfig(): SavedConfig {
+  return {
+    version: 1,
     enabledFeatures: [...enabledFeatures.value],
-    features: {
-      text: {
-        maxChars: featureSettings.value.textMaxChars,
-        maxLines: featureSettings.value.textMaxLines,
-        prohibitedFonts: [...prohibitedFonts.value],
-        prohibitedStyles: [...prohibitedStyles.value],
-      },
-      image: {
-        acceptedFormats: featureSettings.value.imageFormats,
-        maxSize: featureSettings.value.imageMaxSize,
-        maxImages: featureSettings.value.imageMaxImages,
-        editTools: ['Crop', 'Resize', 'Rotate', 'Flip', 'Filters'].filter(
-          (t) => activeChips.value['image-' + t],
-        ),
-      },
-      sticker: {
-        maxPerZone: featureSettings.value.stickerMax,
-        allowedCategories: allowedStickerCategories.value.length
-          ? allowedStickerCategories.value
-          : 'all',
-      },
-      icon: {
-        library: featureSettings.value.iconLibrary,
-        maxPerZone: featureSettings.value.iconMax,
-        buyerCanChange: ['Color', 'Size', 'Rotation', 'Style'].filter(
-          (p) => activeChips.value['icon-' + p],
-        ),
-      },
-    },
-    zones: zones.value.map((z) => {
-      const θ = (z.rotation * Math.PI) / 180
-      const cos = Math.cos(θ), sin = Math.sin(θ)
-      function pt(lx: number, ly: number) {
-        return { x: Math.round(z.x + lx * cos - ly * sin), y: Math.round(z.y + lx * sin + ly * cos) }
-      }
-      return {
-        id: z.id,
-        name: z.name,
-        color: ZONE_COLORS[z.colorIdx].hex,
-        x: z.x,
-        y: z.y,
-        w: z.w,
-        h: z.h,
-        rotation: z.rotation,
-        coordinates: {
-          tl: pt(0, 0),
-          tr: pt(z.w, 0),
-          br: pt(z.w, z.h),
-          bl: pt(0, z.h),
-        },
-        features: [...z.features],
-        required: z.required,
-        maxItems: z.maxItems,
-        showBorder: z.showBorder,
-      }
-    }),
+    featureSettings: { ...featureSettings.value },
+    activeChips: { ...activeChips.value },
+    prohibitedFonts: [...prohibitedFonts.value],
+    prohibitedStyles: [...prohibitedStyles.value],
+    allowedStickerCategories: [...allowedStickerCategories.value],
+    zones: zones.value.map((z) => ({ ...z, features: [...z.features] })),
+  }
+}
+
+function applyConfig(config: SavedConfig) {
+  if (config.version !== 1) return
+  setEnabledFeatures(config.enabledFeatures ?? [])
+  setZones((config.zones ?? []) as Zone[])
+  if (config.featureSettings)
+    featureSettings.value = { ...FEATURE_SETTINGS_DEFAULTS, ...config.featureSettings }
+  if (config.activeChips)
+    activeChips.value = { ...ACTIVE_CHIPS_DEFAULTS, ...config.activeChips }
+  prohibitedFonts.value = config.prohibitedFonts ?? []
+  prohibitedStyles.value = config.prohibitedStyles ?? []
+  allowedStickerCategories.value = config.allowedStickerCategories ?? []
+}
+
+function saveConfig() {
+  const config = buildConfig()
+  try {
+    localStorage.setItem(CONFIG_KEY, JSON.stringify(config))
+  } catch {
+    // localStorage quota exceeded or unavailable
   }
   console.log('Design config:', config)
+  saveStatus.value = 'saved'
+  setTimeout(() => { saveStatus.value = 'idle' }, 2500)
 }
+
+function loadConfig() {
+  const raw = localStorage.getItem(CONFIG_KEY)
+  if (!raw) return
+  try {
+    applyConfig(JSON.parse(raw) as SavedConfig)
+  } catch {
+    // corrupt stored data — ignore
+  }
+}
+
+function resetConfig() {
+  setZones([])
+  setEnabledFeatures(['text', 'image', 'sticker', 'icon'])
+  featureSettings.value = { ...FEATURE_SETTINGS_DEFAULTS }
+  activeChips.value = { ...ACTIVE_CHIPS_DEFAULTS }
+  prohibitedFonts.value = []
+  prohibitedStyles.value = []
+  allowedStickerCategories.value = []
+  localStorage.removeItem(CONFIG_KEY)
+  saveStatus.value = 'idle'
+}
+
+onMounted(loadConfig)
 
 const vertices = computed(() => {
   const z = selectedZone.value
@@ -442,6 +458,32 @@ const vertices = computed(() => {
               ></div>
             </div>
           </div>
+          <div class="zd-row zd-row--col">
+            <span class="zd-key">Shape</span>
+            <div class="shape-picker-grid">
+              <button
+                v-for="s in ZONE_SHAPES"
+                :key="s.id"
+                class="shape-picker-cell"
+                :class="{ active: selectedZone.shape === s.id }"
+                :title="s.label"
+                @click="selectedZone.shape = s.id"
+              >
+                <svg width="16" height="16" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round">
+                  <rect v-if="s.id === 'rect'" x="2" y="3.5" width="16" height="13" rx="1"/>
+                  <rect v-else-if="s.id === 'rounded-rect'" x="2" y="3.5" width="16" height="13" rx="5"/>
+                  <ellipse v-else-if="s.id === 'ellipse'" cx="10" cy="10" rx="8" ry="6.5"/>
+                  <polygon v-else-if="s.id === 'triangle'" points="10,3 18,17 2,17"/>
+                  <polygon v-else-if="s.id === 'diamond'" points="10,2 18,10 10,18 2,10"/>
+                  <polygon v-else-if="s.id === 'star'" points="10,2 12.1,7.2 17.6,7.5 13.3,11.1 14.7,16.5 10,13.5 5.3,16.5 6.7,11.1 2.4,7.5 7.9,7.2"/>
+                  <polygon v-else-if="s.id === 'pentagon'" points="10,2 18.9,8.6 15.6,18 4.4,18 1.1,8.6"/>
+                  <polygon v-else-if="s.id === 'hexagon'" points="10,2 18,6.5 18,13.5 10,18 2,13.5 2,6.5"/>
+                  <path v-else-if="s.id === 'heart'" d="M10,17 C10,17 1,12 1,6 C1,2.5 4,1 6.5,3.5 C7.5,4.5 9,6.5 10,8 C11,6.5 12.5,4.5 13.5,3.5 C16,1 19,2.5 19,6 C19,12 10,17 10,17Z"/>
+                  <path v-else-if="s.id === 'arrow'" d="M1,7.5 L12,7.5 L12,4 L19,10 L12,16 L12,12.5 L1,12.5Z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Transform: position, size, rotation -->
@@ -657,8 +699,71 @@ const vertices = computed(() => {
     </div>
 
     <div class="save-footer">
-      <button class="btn btn-ghost">Reset</button>
-      <button class="btn btn-accent" @click="saveConfig">Save config</button>
+      <div class="footer-left">
+        <button class="btn btn-ghost" title="Clear all zones and reset settings" @click="resetConfig">Reset</button>
+        <button class="btn btn-ghost" title="Restore canvas from last save" @click="loadConfig">Load Config</button>
+      </div>
+      <div class="footer-right">
+        <button
+          class="btn btn-accent"
+          :class="{ 'btn-saved': saveStatus === 'saved' }"
+          @click="saveConfig"
+        >
+          <svg v-if="saveStatus === 'saved'" width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          {{ saveStatus === 'saved' ? 'Saved' : 'Save config' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.footer-left,
+.footer-right {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.btn-saved {
+  background: var(--green) !important;
+}
+.btn-saved:hover {
+  background: #006b50 !important;
+}
+
+.zd-row--col {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.shape-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 3px;
+  width: 100%;
+}
+.shape-picker-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 30px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  color: var(--text2);
+  padding: 0;
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.shape-picker-cell:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+.shape-picker-cell.active {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+  color: var(--accent);
+}
+</style>

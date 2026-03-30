@@ -1,5 +1,9 @@
 node_modules
 
+# Claude Code personal overrides (not committed)
+CLAUDE.local.md
+.claude/settings.local.json
+
 # macOS
 .DS_Store
 
@@ -32,3 +36,5 @@ database.sqlite
 dist/
 
 vue/
+
+CLAUDE.local.md

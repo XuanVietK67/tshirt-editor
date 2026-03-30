@@ -6,10 +6,10 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [vue(), tailwindcss()],
   base: "./",
-  // build: {
-  //   outDir: path.resolve(__dirname, "../tshirt-v3/public/vue"),
-  //   emptyOutDir: true,
-  // },
+  build: {
+    outDir: path.resolve(__dirname, "../tshirt-v3/public/vue"),
+    emptyOutDir: true,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

@@ -27,9 +27,9 @@ function closeSidebar() {
     <!-- Tablet sidebar backdrop -->
     <div v-if="sidebarOpen" class="sidebar-backdrop" @click="closeSidebar"></div>
 
-    <LeftSidebar />
+    <LeftSidebar @navigate-to-canvas="activePanel = 'canvas'" />
     <MainCanvas />
-    <RightPanel />
+    <RightPanel @navigate-to-canvas="activePanel = 'canvas'" />
     <MobileNav :active="activePanel" @change="activePanel = $event" />
   </div>
 </template>

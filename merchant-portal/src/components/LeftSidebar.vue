@@ -4,6 +4,8 @@ import { useEditorState, ZONE_COLORS, ZONE_SHAPES } from '@/composables/useEdito
 
 const { zones, selectedZoneId, enabledFeaturesCount, activeShape, selectZone, deleteZone, addDefaultZone, setMode, setActiveShape } = useEditorState()
 
+const emit = defineEmits<{ 'navigate-to-canvas': [] }>()
+
 const activePage = ref<string>('features')
 
 function setPage(page: string) {
@@ -66,7 +68,7 @@ function setPage(page: string) {
           :key="zone.id"
           class="nav-item zone-item"
           :class="{ active: selectedZoneId === zone.id }"
-          @click="selectZone(zone.id)"
+          @click="selectZone(zone.id); emit('navigate-to-canvas')"
         >
           <div class="zone-swatch" :style="{ background: ZONE_COLORS[zone.colorIdx].hex }"></div>
           <div class="zone-item-body">
@@ -89,7 +91,7 @@ function setPage(page: string) {
               class="shape-cell"
               :class="{ active: activeShape === s.id }"
               :title="s.label"
-              @click="setActiveShape(s.id)"
+              @click="setActiveShape(s.id); emit('navigate-to-canvas')"
             >
               <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round">
                 <rect v-if="s.id === 'rect'" x="2" y="3.5" width="16" height="13" rx="1"/>
